@@ -47,7 +47,7 @@ const getRandomCode = ({ SSID, password, pk }: IGetRandomCode): string => {
   return md5Str;
 }
 
-console.log(getRandomCodes({ SSID: 'gizwits', password: 'giz$2025', pks: ['162866a5336c4a92a7edba1a2b07b182'] }));
+// console.log(getRandomCodes({ SSID: 'gizwits', password: 'giz$2025', pks: ['162866a5336c4a92a7edba1a2b07b182'] }));
 
 
 export default getRandomCodes;

@@ -102,6 +102,7 @@ class SDK implements ISDK {
   appSecret: string = '';
   token: string = '';
   uid: string = '';
+  UDPSocket: any = null;
   
   timeout: any = null;
   specialProductKeys: string[] = [];
@@ -116,13 +117,14 @@ class SDK implements ISDK {
    * 设置域名
    */
   setDomain = (cloudServiceInfo: ICloudServiceInfo | null) => {
-    if (cloudServiceInfo === null) {
+    if (cloudServiceInfo && cloudServiceInfo.openAPIInfo) {
+      
+    } else {
       cloudServiceInfo = {
         openAPIInfo: 'api.gizwits.com',
       };
     }
     setGlobalData('cloudServiceInfo', cloudServiceInfo);
-
   }
 
   /**
@@ -130,7 +132,7 @@ class SDK implements ISDK {
    */
   configDevice = ({ ssid, password, softAPSSIDPrefix }: { ssid: string; password: string; softAPSSIDPrefix: string; }, target: ITarget): any => {
     return new Promise((res) => {
-
+      console.log('start config device');
       let onNetworkFlag = true;
 
       const header = [0, 0, 0, 3];
@@ -168,11 +170,12 @@ class SDK implements ISDK {
       /**
        * 连接socket 发送
        */
-      const UDPSocket = wx.createUDPSocket();
-      UDPSocket.bind();
+      this.UDPSocket = wx.createUDPSocket();
+      this.UDPSocket.bind();
 
       this.UDPInterval = setInterval(() => {
-        UDPSocket.send({
+        console.log('send udp');
+        this.UDPSocket.send({
           address: target.ip,
           port: target.port,
           message: uint8Array,
@@ -181,8 +184,8 @@ class SDK implements ISDK {
         });
       }, 1000);
 
-      UDPSocket.onError((data: any) => {
-        console.log('onError', data);
+      this.UDPSocket.onError((data: any) => {
+        console.log('on udp Error', data);
         // UDPSocket.close();
         clearInterval(this.UDPInterval);
         this.clean();
@@ -197,18 +200,22 @@ class SDK implements ISDK {
 
       // 清理一些监听，调用搜索设备
       const searchDeviceHandle = async () => {
-        UDPSocket.offMessage();
+        console.log('searchDeviceHandle');
+        this.UDPSocket.offMessage();
+        this.UDPSocket.offError();
         clearInterval(this.UDPInterval);
         // 标记可以停止监听
         onNetworkFlag = false;
+        // 关闭socket
         const devicesReturn = await this.searchDevice({ ssid, password });
-        console.log('devicesReturn', devicesReturn);
+        console.log('searchDeviceHandle', devicesReturn);
         res(devicesReturn);
       }
 
-      UDPSocket.onMessage(async (data: any) => {
-        console.log('onMessage', data);
+      this.UDPSocket.onMessage(async (data: any) => {
+        console.log('on udp Message', data);
         // 收到回调 可以停止发包
+        clearInterval(this.UDPInterval);
         searchDeviceHandle();
       });
 
@@ -220,6 +227,7 @@ class SDK implements ISDK {
              * 检查当前网络还是不是热点网络
              */
             if (data.wifi.SSID.indexOf(softAPSSIDPrefix) === -1) {
+              clearInterval(this.UDPInterval);
               searchDeviceHandle();
             }
           }
@@ -236,6 +244,7 @@ class SDK implements ISDK {
     return new Promise((res) => {
       // 连续发起请求 确认大循环
       const codes = getRandomCodes({ SSID: ssid, password: password, pks: this.specialProductKeys });
+      console.log('getRandomCodes', codes);
       let codeStr = '';
       codes.map(item => {
         codeStr += `${item},`
@@ -268,7 +277,6 @@ class SDK implements ISDK {
           } as IResult);
         }
       }
-
       query();
     });
   }
@@ -280,7 +288,6 @@ class SDK implements ISDK {
   setDeviceOnboardingDeploy = ({
     ssid, password, timeout, isBind = true, softAPSSIDPrefix }: ISetDeviceOnboardingDeployProps): any => {
     return new Promise((res) => {
-      console.log('this.timeout', this.timeout);
       if (this.timeout) {
         // 方法还在执行中
         res({
@@ -314,6 +321,9 @@ class SDK implements ISDK {
        */
       wx.onLocalServiceFound(async (data: any) => {
         // 找到服务 发送指令 
+        console.log('onLocalServiceFound', data);
+        // 停止发现
+        wx.offLocalServiceFound(() => {});
         const result = await this.configDevice({ ssid, password, softAPSSIDPrefix }, data);
         if (result.success) {
           // 发起绑定
@@ -346,16 +356,27 @@ class SDK implements ISDK {
         this.clean();
       });
 
-      wx.startLocalServiceDiscovery({
-        serviceType: '_example._udp',
-        success: (data) => {
-          // 调用发现成功
-          console.log(data);
-        },
-        fail: (err) => {
-          // 调用发现失败
-          console.log(err);
-        },
+      wx.stopLocalServiceDiscovery({
+        complete: () => {
+          wx.startLocalServiceDiscovery({
+            serviceType: '_example._udp',
+            success: (data) => {
+              // 调用发现成功
+              console.log(data);
+            },
+            fail: (err) => {
+              // 调用发现失败
+              console.log(err);
+              res({
+                success: false,
+                err: {
+                  errorCode: errorCode.WECHAT_ERROR,
+                  errorMessage: err.errMsg
+                }
+              } as IResult);
+            },
+          });
+        }
       });
     });
   }
@@ -369,6 +390,7 @@ class SDK implements ISDK {
 
       let timestamp = Date.parse(`${new Date()}`);  
       timestamp = timestamp / 1000;
+      
       devices.map(item => {
 
         const index = this.specialProductKeys.findIndex(pk => item.product_key === pk);
@@ -419,6 +441,11 @@ class SDK implements ISDK {
     this.mainRes = null;
     wx.stopLocalServiceDiscovery();
     this.disableSearchDevice = true;
+    if (this.UDPSocket) {
+      this.UDPSocket.offError();
+      this.UDPSocket.offMessage();
+      this.UDPSocket.close();
+    }
   }
 
   /**

@@ -10,7 +10,11 @@ export default function request(url, options) {
     wx.request({ 
       url, ...options,
       success: (data: any) => {
-        res({ data: data.data, success: true });
+        if (data.data.error_code) {
+          ret({ err: data.data, success: false });
+        } else {
+          res({ data: data.data, success: true });
+        }
       },
       fail: (err: any) => {
         ret({ err, success: false });

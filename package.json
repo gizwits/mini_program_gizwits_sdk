@@ -1,0 +1,30 @@
+{
+  "name": "mini_program_gizwits_sdk",
+  "version": "1.0.17",
+  "description": "小程序配网sdk",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "compile": "./node_modules/typescript/bin/tsc",
+    "prepare": "npm run tsc",
+    "tsc": "node ./node_modules/typescript/lib/tsc.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gizwits/mini_program_gizwits_sdk.git"
+  },
+  "keywords": [
+    "gizwits",
+    "miniprogram",
+    "sdk"
+  ],
+  "devDependencies": {
+    "typescript": "^3.3.3333"
+  },
+  "author": "gizwits",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/gizwits/mini_program_gizwits_sdk/issues"
+  },
+  "homepage": "https://github.com/gizwits/mini_program_gizwits_sdk#readme"
+}
