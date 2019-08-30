@@ -287,6 +287,7 @@ class SDK implements ISDK {
    */
   setDeviceOnboardingDeploy = ({
     ssid, password, timeout, isBind = true, softAPSSIDPrefix }: ISetDeviceOnboardingDeployProps): any => {
+    this.clean();
     return new Promise((res) => {
       if (this.timeout) {
         // 方法还在执行中
