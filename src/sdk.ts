@@ -167,6 +167,7 @@ class SDK implements ISDK {
       }
 
       const config = header.concat(length).concat(content);
+      console.log('发送指令给设备', config);
       const buffer = new ArrayBuffer(config.length);
       const uint8Array = new Uint8Array(buffer)
       for (let i = 0; i < buffer.byteLength; i++) {
@@ -254,7 +255,6 @@ class SDK implements ISDK {
     return new Promise((res) => {
       // 连续发起请求 确认大循环
       const codes = getRandomCodes({ SSID: ssid, password: password, pks: this.specialProductKeys });
-      console.log('getRandomCodes', codes);
       let codeStr = '';
       codes.map(item => {
         codeStr += `${item},`
@@ -264,11 +264,8 @@ class SDK implements ISDK {
         if (this.disableSearchDevice) {
           return;
         }
-        console.log('query randomcode');
-
         const data = await request(`/app/device_register?random_codes=${codeStr}`, { method: 'get' });
         console.log('query randomcode', data);
-
         if (data.success) {
           if (data.data.length === 0) {
             // 重新请求
@@ -374,10 +371,10 @@ class SDK implements ISDK {
       wx.stopLocalServiceDiscovery({
         complete: () => {
           wx.startLocalServiceDiscovery({
-            serviceType: '_example._udp',
+            serviceType: '_local._udp',
             success: (data) => {
               // 调用发现成功
-              console.log(data);
+              console.log('找到MDNS服务', data);
             },
             fail: (err) => {
               // 调用发现失败
