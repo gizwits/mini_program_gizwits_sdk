@@ -1,9 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const globalData = {};
-
-export function setGlobalData(key, value) {
-  globalData[key] = value;
+function setGlobalData(key, value) {
+    globalData[key] = value;
 }
-
-export function getGlobalData(key) {
-  return globalData[key];
+exports.setGlobalData = setGlobalData;
+function getGlobalData(key) {
+    return globalData[key];
 }
+exports.getGlobalData = getGlobalData;

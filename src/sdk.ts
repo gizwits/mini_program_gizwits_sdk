@@ -264,7 +264,7 @@ class SDK implements ISDK {
         if (this.disableSearchDevice) {
           return;
         }
-        const data = await request(`/app/device_register?random_codes=${codeStr}`, { method: 'get' });
+        const data: any = await request(`/app/device_register?random_codes=${codeStr}`, { method: 'get' });
         console.log('query randomcode', data);
         if (data.success) {
           if (data.data.length === 0) {
