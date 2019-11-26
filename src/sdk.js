@@ -1,18 +1,10 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const errorCode_1 = require("./errorCode");
 const randomCode_1 = require("./randomCode");
 const global_1 = require("./global");
 const openApiRequest_1 = require("./openApiRequest");
-const MD5 = require("./md5");
+const md5_1 = require("./md5");
 const sleep_1 = require("./sleep");
 class SDK {
     constructor({ appID, appSecret, specialProductKeys, specialProductKeySecrets, cloudServiceInfo, token, uid }) {
@@ -97,49 +89,49 @@ class SDK {
                         }
                     });
                 });
-                const searchDeviceHandle = () => __awaiter(this, void 0, void 0, function* () {
+                const searchDeviceHandle = async () => {
                     console.log('searchDeviceHandle');
                     this.UDPSocket.offMessage();
                     this.UDPSocket.offError();
                     this.disableSendUDP = true;
                     onNetworkFlag = false;
-                    const devicesReturn = yield this.searchDevice({ ssid, password });
+                    const devicesReturn = await this.searchDevice({ ssid, password });
                     console.log('searchDeviceHandle', devicesReturn);
                     res(devicesReturn);
-                });
-                this.UDPSocket.onMessage((data) => __awaiter(this, void 0, void 0, function* () {
+                };
+                this.UDPSocket.onMessage(async (data) => {
                     console.log('on udp Message', data);
-                    searchDeviceHandle();
-                }));
-                wx.onNetworkStatusChange(() => __awaiter(this, void 0, void 0, function* () {
+                    await searchDeviceHandle();
+                });
+                wx.onNetworkStatusChange(async () => {
                     onNetworkFlag && wx.getConnectedWifi({
-                        success: (data) => __awaiter(this, void 0, void 0, function* () {
+                        success: async (data) => {
                             if (data.wifi.SSID.indexOf(softAPSSIDPrefix) === -1) {
                                 searchDeviceHandle();
                             }
-                        })
+                        }
                     });
-                }));
+                });
             });
         };
-        this.searchDevice = ({ ssid, password }) => __awaiter(this, void 0, void 0, function* () {
-            return new Promise((res) => {
+        this.searchDevice = ({ ssid, password }) => {
+            return new Promise(async (res) => {
                 const codes = randomCode_1.default({ SSID: ssid, password: password, pks: this.specialProductKeys });
                 let codeStr = '';
                 codes.map(item => {
                     codeStr += `${item},`;
                 });
                 codeStr = codeStr.substring(0, codeStr.length - 1);
-                const query = () => __awaiter(this, void 0, void 0, function* () {
+                const query = async () => {
                     if (this.disableSearchDevice) {
                         return;
                     }
-                    const data = yield openApiRequest_1.default(`/app/device_register?random_codes=${codeStr}`, { method: 'get' });
+                    const data = await openApiRequest_1.default(`/app/device_register?random_codes=${codeStr}`, { method: 'get' });
                     console.log('query randomcode', data);
                     if (data.success) {
                         if (data.data.length === 0) {
-                            yield sleep_1.default(3000);
-                            query();
+                            await sleep_1.default(3000);
+                            await query();
                         }
                         else {
                             res({
@@ -157,10 +149,10 @@ class SDK {
                             },
                         });
                     }
-                });
-                query();
+                };
+                await query();
             });
-        });
+        };
         this.setDeviceOnboardingDeploy = ({ ssid, password, timeout, isBind = true, softAPSSIDPrefix }) => {
             this.clean();
             return new Promise((res) => {
@@ -186,13 +178,13 @@ class SDK {
                     });
                     this.clean();
                 }, timeout * 1000);
-                this.callBack = (data) => __awaiter(this, void 0, void 0, function* () {
+                this.callBack = async (data) => {
                     console.log('onLocalServiceFound', data);
                     this.callBack = null;
-                    const result = yield this.configDevice({ ssid, password, softAPSSIDPrefix }, data);
+                    const result = await this.configDevice({ ssid, password, softAPSSIDPrefix }, data);
                     if (result.success) {
                         if (isBind) {
-                            const bindData = yield this.bindDevices(result.data);
+                            const bindData = await this.bindDevices(result.data);
                             if (bindData.success) {
                                 res({
                                     success: true,
@@ -218,7 +210,7 @@ class SDK {
                     }
                     else {
                     }
-                });
+                };
                 wx.stopLocalServiceDiscovery({
                     complete: () => {
                         wx.startLocalServiceDiscovery({
@@ -242,7 +234,7 @@ class SDK {
             });
         };
         this.bindDevices = (devices) => {
-            return new Promise((res) => __awaiter(this, void 0, void 0, function* () {
+            return new Promise(async (res) => {
                 const promises = [];
                 let timestamp = Date.parse(`${new Date()}`);
                 timestamp = timestamp / 1000;
@@ -255,7 +247,7 @@ class SDK {
                         method: 'POST',
                         headers: {
                             'X-Gizwits-Timestamp': timestamp,
-                            'X-Gizwits-Signature': MD5(`${ps}${timestamp}`).toLowerCase(),
+                            'X-Gizwits-Signature': md5_1.default(`${ps}${timestamp}`).toLowerCase(),
                         },
                         data: {
                             "product_key": item.product_key,
@@ -266,7 +258,7 @@ class SDK {
                     });
                     promises.push(promise);
                 });
-                const data = yield Promise.all(promises);
+                const data = await Promise.all(promises);
                 console.log('Promise.all', data);
                 const returnData = [];
                 data.map((item) => {
@@ -278,7 +270,7 @@ class SDK {
                     success: true,
                     data: returnData,
                 });
-            }));
+            });
         };
         this.clean = () => {
             clearTimeout(this.timeout);

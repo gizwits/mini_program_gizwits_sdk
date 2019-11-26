@@ -1,9 +1,9 @@
-const globalData = {};
+const globalData: any = {};
 
-export function setGlobalData(key, value) {
+export function setGlobalData(key: any, value: any) {
   globalData[key] = value;
 }
 
-export function getGlobalData(key) {
+export function getGlobalData(key: any) {
   return globalData[key];
 }

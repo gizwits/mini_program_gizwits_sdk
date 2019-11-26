@@ -2,7 +2,7 @@ import errorCode from "./errorCode";
 import getRandomCodes from "./randomCode";
 import { setGlobalData } from "./global";
 import request from "./openApiRequest";
-import MD5 = require('./md5');
+import MD5 from './md5';
 import sleep from './sleep';
 
 interface ISetDeviceOnboardingDeployProps {
@@ -228,7 +228,7 @@ class SDK implements ISDK {
       this.UDPSocket.onMessage(async (data: any) => {
         console.log('on udp Message', data);
         // 收到回调 可以停止发包
-        searchDeviceHandle();
+        await searchDeviceHandle();
       });
 
       wx.onNetworkStatusChange(async () => {
@@ -251,8 +251,8 @@ class SDK implements ISDK {
   /**
    * 大循环确认
    */
-  searchDevice = async ({ ssid, password }) => {
-    return new Promise((res) => {
+  searchDevice = ({ ssid, password }: {ssid: string, password: string}) => {
+    return new Promise(async (res) => {
       // 连续发起请求 确认大循环
       const codes = getRandomCodes({ SSID: ssid, password: password, pks: this.specialProductKeys });
       let codeStr = '';
@@ -270,7 +270,7 @@ class SDK implements ISDK {
           if (data.data.length === 0) {
             // 重新请求
             await sleep(3000);
-            query();
+            await query();
           } else {
             // 搜索到设备
             res({
@@ -288,7 +288,7 @@ class SDK implements ISDK {
           } as IResult);
         }
       }
-      query();
+      await query();
     });
   }
 

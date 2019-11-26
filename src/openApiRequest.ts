@@ -2,10 +2,10 @@ import request from './request';
 import { getGlobalData } from "./global";
 
 
-export default async function openApiRequest(url, options) {
+export default function openApiRequest(url: string, options: any) {
 
   const requestOptions = { ...options };
-  const headers = {
+  const headers: any = {
     'Content-Type': 'application/json',
     'X-Gizwits-Application-Id': getGlobalData('appID'),
   };
