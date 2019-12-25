@@ -1,3 +1,11 @@
+
+
+declare namespace md5 {
+  function hex(data: any): any;
+}
+
+declare function md5(data: any): any;
+
 type TUtf8 = {
   toBytes: (data: any) => any
 }
@@ -19,4 +27,3 @@ declare namespace aesjs {
   const ModeOfOperation: TModeOfOperation;
 }
 
-export default aesjs;

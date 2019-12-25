@@ -4,8 +4,8 @@ const errorCode_1 = require("./errorCode");
 const randomCode_1 = require("./randomCode");
 const global_1 = require("./global");
 const openApiRequest_1 = require("./openApiRequest");
-const md5_1 = require("./md5");
 const sleep_1 = require("./sleep");
+const MD5 = require("./md5");
 class SDK {
     constructor({ appID, appSecret, specialProductKeys, specialProductKeySecrets, cloudServiceInfo, token, uid }) {
         this.appID = '';
@@ -99,9 +99,9 @@ class SDK {
                     console.log('searchDeviceHandle', devicesReturn);
                     res(devicesReturn);
                 };
-                this.UDPSocket.onMessage(async (data) => {
+                this.UDPSocket.onMessage((data) => {
                     console.log('on udp Message', data);
-                    await searchDeviceHandle();
+                    searchDeviceHandle();
                 });
                 wx.onNetworkStatusChange(async () => {
                     onNetworkFlag && wx.getConnectedWifi({
@@ -114,14 +114,16 @@ class SDK {
                 });
             });
         };
-        this.searchDevice = ({ ssid, password }) => {
-            return new Promise(async (res) => {
+        this.searchDevice = async ({ ssid, password }) => {
+            console.log('searchDevice');
+            return new Promise((res) => {
                 const codes = randomCode_1.default({ SSID: ssid, password: password, pks: this.specialProductKeys });
                 let codeStr = '';
                 codes.map(item => {
                     codeStr += `${item},`;
                 });
                 codeStr = codeStr.substring(0, codeStr.length - 1);
+                console.log('searchDevice', codeStr);
                 const query = async () => {
                     if (this.disableSearchDevice) {
                         return;
@@ -131,7 +133,7 @@ class SDK {
                     if (data.success) {
                         if (data.data.length === 0) {
                             await sleep_1.default(3000);
-                            await query();
+                            query();
                         }
                         else {
                             res({
@@ -150,7 +152,7 @@ class SDK {
                         });
                     }
                 };
-                await query();
+                query();
             });
         };
         this.setDeviceOnboardingDeploy = ({ ssid, password, timeout, isBind = true, softAPSSIDPrefix }) => {
@@ -247,7 +249,7 @@ class SDK {
                         method: 'POST',
                         headers: {
                             'X-Gizwits-Timestamp': timestamp,
-                            'X-Gizwits-Signature': md5_1.default(`${ps}${timestamp}`).toLowerCase(),
+                            'X-Gizwits-Signature': MD5(`${ps}${timestamp}`).toLowerCase(),
                         },
                         data: {
                             "product_key": item.product_key,
