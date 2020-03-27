@@ -7242,6 +7242,7 @@ worker.postMessage({
     terminate(): void;
   }
   interface Wx {
+    createUDPSocketHandler(): any;
     createUDPSocket(): any;
     /** [Object wx.getAccountInfoSync()](wx.getAccountInfoSync.md)
 *

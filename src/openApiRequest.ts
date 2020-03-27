@@ -1,9 +1,9 @@
 import request from './request';
 import { getGlobalData } from "./global";
+import { IResult } from './sdk';
 
 
-export default function openApiRequest(url: string, options: any) {
-
+const openApiRequest = (url: string, options: any): Promise<IResult> => {
   const requestOptions = { ...options };
   const headers: any = {
     'Content-Type': 'application/json',
@@ -18,3 +18,5 @@ export default function openApiRequest(url: string, options: any) {
   const openApiUrl = getGlobalData('cloudServiceInfo').openAPIInfo;
   return request('https://' + openApiUrl + url, requestOptions);
 }
+
+export default openApiRequest;
