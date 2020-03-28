@@ -42,3 +42,4 @@ const data = await sdk.setDeviceOnboardingDeploy({
   }
 }
 ```
+
