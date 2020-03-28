@@ -1,0 +1,4 @@
+instrumentation:
+  root: .   # 执行的根目录
+  extensions:
+    - .ts   # 检查覆盖率的文件扩张名

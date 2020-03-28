@@ -1,11 +1,11 @@
 import errorCode from "./errorCode";
+import * as MD5 from 'js-md5';
 import getRandomCodes from "./randomCode";
 import { setGlobalData } from "./global";
 import request from "./openApiRequest";
 
 import sleep from './sleep';
 
-import MD5 = require('./md5');
 
 interface ISetDeviceOnboardingDeployProps {
   ssid: string;
@@ -52,7 +52,7 @@ interface ITarget {
   port: number;
 }
 
-interface configDeviceParamse{
+interface configDeviceParamse {
   ssid: string; password: string; softAPSSIDPrefix: string;
 }
 
@@ -152,9 +152,9 @@ class SDK implements ISDK {
     { ssid, password, softAPSSIDPrefix }: configDeviceParamse,
     target: ITarget
   ): Promise<IResult> => {
-    return new Promise((res) => {
-      console.log('start config device');
-      let searchingDevice = true;
+    return new Promise((res, rej) => {
+      // console.log('start config device');
+      let searchingDevice = false;
 
       const header = [0, 0, 0, 3];
       let length: number[] = [];
@@ -183,7 +183,7 @@ class SDK implements ISDK {
       }
 
       const config = header.concat(length).concat(content);
-      console.log('发送指令给设备', config);
+      // console.log('发送指令给设备', config);
       const buffer = new ArrayBuffer(config.length);
       const uint8Array = new Uint8Array(buffer)
       for (let i = 0; i < buffer.byteLength; i++) {
@@ -204,10 +204,8 @@ class SDK implements ISDK {
        * 或者成功
        */
       const sendMessage = () => {
-        if (this.disableSendUDP) return;
-        console.log('send udp');
         try {
-          this.UDPSocketHandler.send({
+          !this.disableSendUDP && this.UDPSocketHandler.send({
             address: target.ip,
             port: target.port,
             message: uint8Array,
@@ -215,7 +213,7 @@ class SDK implements ISDK {
             length: uint8Array.byteLength,
           });
         } catch (error) {
-          console.log('sendMessage', error);
+          // console.log('sendMessage', error);
         }
         // setTimeout(() => {
         //   sendMessage();
@@ -228,10 +226,10 @@ class SDK implements ISDK {
       }, 2000);
 
       this.UDPSocketHandler.onError((data: any) => {
-        console.log('on udp Error', data);
+        // console.log('on udp Error', data);
         // UDPSocketHandler.close();
         this.clean();
-        res({
+        rej({
           success: false,
           err: {
             errorCode: errorCode.WECHAT_ERROR,
@@ -242,7 +240,8 @@ class SDK implements ISDK {
 
       // 清理一些监听，调用搜索设备
       const searchDeviceHandle = async () => {
-        console.log('searchDeviceHandle');
+        if (searchingDevice) return;
+        // console.log('searchDeviceHandle');
         this.UDPSocketHandler.offMessage();
         this.UDPSocketHandler.offError();
         this.sendMessageInterval && clearInterval(this.sendMessageInterval);
@@ -250,17 +249,21 @@ class SDK implements ISDK {
         // 标记可以停止监听
         searchingDevice = true;
         // 关闭socket
-        const devicesReturn = await this.searchDevice({ ssid, password });
-        console.log('searchDeviceHandle', devicesReturn);
-        res(devicesReturn);
+        try {
+          const devicesReturn = await this.searchDevice({ ssid, password });
+          res(devicesReturn);
+        } catch (error) {
+          rej(error);
+        }
       }
 
-      this.UDPSocketHandler.onMessage((data: any) => {
-        console.log('on udp Message', data);
+      this.UDPSocketHandler.onMessage(() => {
+        // console.log('on udp Message', data);
         // 收到回调 可以停止发包
         searchDeviceHandle();
       });
 
+      // 没有收到udp回复的时候不进入配网
       wx.onNetworkStatusChange(async () => {
         // 发生网络切换的时候也停止发包，进入大循环配网
         // 搜索中的时候不要重复搜索
@@ -269,9 +272,7 @@ class SDK implements ISDK {
             /**
              * 检查当前网络还是不是热点网络
              */
-            if (data.wifi.SSID.indexOf(softAPSSIDPrefix) === -1) {
-              searchDeviceHandle();
-            }
+            data.wifi.SSID.indexOf(softAPSSIDPrefix) === -1 && searchDeviceHandle();
           }
         });
       });
@@ -281,8 +282,7 @@ class SDK implements ISDK {
   /**
    * 大循环确认
    */
-  searchDevice = async ({ ssid, password }: { ssid: string, password: string }): Promise<IResult> => {
-    console.log('searchDevice');
+  searchDevice = ({ ssid, password }: { ssid: string, password: string }): Promise<IResult> => {
     return new Promise((res, rej) => {
       // 连续发起请求 确认大循环
       const codes = getRandomCodes({ SSID: ssid, password: password, pks: this.specialProductKeys });
@@ -291,18 +291,14 @@ class SDK implements ISDK {
         codeStr += `${item},`
       })
       codeStr = codeStr.substring(0, codeStr.length - 1);
-      console.log('searchDevice', codeStr);
       const query = async () => {
-        if (this.disableSearchDevice) {
-          return;
-        }
-        const data: any = await request(`/app/device_register?random_codes=${codeStr}`, { method: 'get' });
-        console.log('query randomcode', data);
-        if (data.success) {
+        let data: any = {};
+        try {
+          data = await request(`/app/device_register?random_codes=${codeStr}`, { method: 'get' });
           if (data.data.length === 0) {
             // 重新请求
             await sleep(3000);
-            query();
+            !this.disableSearchDevice && query();
           } else {
             // 搜索到设备
             res({
@@ -310,7 +306,7 @@ class SDK implements ISDK {
               data: data.data
             } as IResult);
           }
-        } else {
+        } catch (error) {
           rej({
             success: false,
             err: {
@@ -330,7 +326,6 @@ class SDK implements ISDK {
    */
   setDeviceOnboardingDeploy = ({
     ssid, password, timeout, isBind = true, softAPSSIDPrefix }: ISetDeviceOnboardingDeployProps): Promise<IResult> => {
-    this.clean();
     return new Promise((res, rej) => {
       if (this.timeoutHandler) {
         // 方法还在执行中
@@ -343,6 +338,7 @@ class SDK implements ISDK {
         } as IResult);
         return;
       }
+      this.clean();
       this.setDeviceOnboardingDeployRej = rej;
       this.disableSearchDevice = false;
       /**
@@ -363,22 +359,21 @@ class SDK implements ISDK {
        * 发现设备
        * 注册onFoundService 监听发现回掉
        */
-      this.onFoundService = async (data: any) => {
+      this.onFoundService = async (data: ITarget) => {
         // 找到服务 发送指令 
-        console.log('onLocalServiceFound', data);
+        // console.log('onLocalServiceFound', data);
         // 停止发现
         this.onFoundService = null;
-        const result = await this.configDevice({ ssid, password, softAPSSIDPrefix }, data);
-        if (result.success) {
-          // 发起绑定
+        try {
+          const result = await this.configDevice({ ssid, password, softAPSSIDPrefix }, data);
           if (isBind) {
-            const bindData = await this.bindDevices(result.data as unknown as IDevice[]);
-            if (bindData.success) {
+            try {
+              await this.bindDevices(result.data as unknown as IDevice[]);
               res({
                 success: true,
                 data: result.data,
               } as IResult);
-            } else {
+            } catch (error) {
               rej({
                 success: false,
                 err: {
@@ -388,15 +383,17 @@ class SDK implements ISDK {
               } as IResult);
             }
           } else {
-            rej({
+            // 不需要绑定 直接返回成功
+            res({
               success: true,
               data: result.data,
             } as IResult);
           }
-
-        } else {
-          // 解析错误码
-          rej(result);
+        } catch (error) {
+          // console.log('configDevice', error);
+          rej(error);
+        } finally {
+          this.clean();
         }
       }
 
@@ -404,20 +401,20 @@ class SDK implements ISDK {
         complete: () => {
           wx.startLocalServiceDiscovery({
             serviceType: '_local._udp',
-            success: (data) => {
+            success: () => {
               // 调用发现成功
-              console.log('找到MDNS服务', data);
+              // console.log('找到MDNS服务', data);
             },
             fail: (err) => {
               // 调用发现失败
-              console.log(err);
-              res({
+              rej({
                 success: false,
                 err: {
                   errorCode: errorCode.WECHAT_ERROR,
                   errorMessage: err.errMsg
                 }
               } as IResult);
+              this.clean();
             },
           });
         }
@@ -429,14 +426,13 @@ class SDK implements ISDK {
    * 绑定多个设备
    */
   bindDevices = (devices: IDevice[]): Promise<IResult> => {
-    return new Promise(async (res) => {
+    return new Promise(async (res, rej) => {
       const promises: Promise<IResult>[] = [];
 
       let timestamp = Date.parse(`${new Date()}`);
       timestamp = timestamp / 1000;
 
       devices.map(item => {
-
         const index = this.specialProductKeys.findIndex(pk => item.product_key === pk);
         if (index === -1) return;
         const ps = this.specialProductKeySecrets[index];
@@ -459,18 +455,19 @@ class SDK implements ISDK {
         promises.push(promise);
       });
 
-      const data = await Promise.all(promises);
-      console.log('Promise.all', data);
-      const returnData: any = [];
-      data.map((item: any) => {
-        if (item.success) {
-          returnData.push(item.data);
-        }
-      })
-      res({
-        success: true,
-        data: returnData,
-      });
+      try {
+        const data = await Promise.all(promises);
+        const returnData: any = [];
+        data.map((item: any) => {
+          item.success && returnData.push(item.data);
+        })
+        res({
+          success: true,
+          data: returnData,
+        });
+      } catch (error) {
+        rej(error);
+      }
     });
   }
 
@@ -505,8 +502,8 @@ class SDK implements ISDK {
           errorMessage: '手动停止'
         }
       });
-      this.clean();
     }
+    this.clean();
   }
 }
 

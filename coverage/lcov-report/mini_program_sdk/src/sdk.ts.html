@@ -1,0 +1,1584 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for mini_program_sdk/src/sdk.ts</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../../prettify.css" />
+    <link rel="stylesheet" href="../../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../../index.html">All files</a> / <a href="index.html">mini_program_sdk/src</a> sdk.ts
+    </h1>
+    <div class='clearfix'>
+    </div>
+  </div>
+  <div class='status-line high'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211
+212
+213
+214
+215
+216
+217
+218
+219
+220
+221
+222
+223
+224
+225
+226
+227
+228
+229
+230
+231
+232
+233
+234
+235
+236
+237
+238
+239
+240
+241
+242
+243
+244
+245
+246
+247
+248
+249
+250
+251
+252
+253
+254
+255
+256
+257
+258
+259
+260
+261
+262
+263
+264
+265
+266
+267
+268
+269
+270
+271
+272
+273
+274
+275
+276
+277
+278
+279
+280
+281
+282
+283
+284
+285
+286
+287
+288
+289
+290
+291
+292
+293
+294
+295
+296
+297
+298
+299
+300
+301
+302
+303
+304
+305
+306
+307
+308
+309
+310
+311
+312
+313
+314
+315
+316
+317
+318
+319
+320
+321
+322
+323
+324
+325
+326
+327
+328
+329
+330
+331
+332
+333
+334
+335
+336
+337
+338
+339
+340
+341
+342
+343
+344
+345
+346
+347
+348
+349
+350
+351
+352
+353
+354
+355
+356
+357
+358
+359
+360
+361
+362
+363
+364
+365
+366
+367
+368
+369
+370
+371
+372
+373
+374
+375
+376
+377
+378
+379
+380
+381
+382
+383
+384
+385
+386
+387
+388
+389
+390
+391
+392
+393
+394
+395
+396
+397
+398
+399
+400
+401
+402
+403
+404
+405
+406
+407
+408
+409
+410
+411
+412
+413
+414
+415
+416
+417
+418
+419
+420
+421
+422
+423
+424
+425
+426
+427
+428
+429
+430
+431
+432
+433
+434
+435
+436
+437
+438
+439
+440
+441
+442
+443
+444
+445
+446
+447
+448
+449
+450
+451
+452
+453
+454
+455
+456
+457
+458
+459
+460
+461
+462
+463
+464
+465
+466
+467
+468
+469
+470
+471
+472
+473
+474
+475
+476
+477
+478
+479
+480
+481
+482
+483
+484
+485
+486
+487
+488
+489
+490
+491
+492
+493
+494
+495
+496
+497
+498
+499
+500
+501
+502
+503
+504
+505
+506
+507
+508
+509
+510
+511
+512
+513
+514</td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">32x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">64x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">192x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">13x</span>
+<span class="cline-any cline-yes">13x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">27x</span>
+<span class="cline-any cline-yes">27x</span>
+<span class="cline-any cline-yes">27x</span>
+<span class="cline-any cline-yes">27x</span>
+<span class="cline-any cline-yes">27x</span>
+<span class="cline-any cline-yes">27x</span>
+<span class="cline-any cline-yes">27x</span>
+<span class="cline-any cline-yes">27x</span>
+<span class="cline-any cline-yes">27x</span>
+<span class="cline-any cline-yes">24x</span>
+<span class="cline-any cline-yes">24x</span>
+<span class="cline-any cline-yes">24x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import errorCode from "./errorCode";
+import * as MD5 from 'js-md5';
+import getRandomCodes from "./randomCode";
+import { setGlobalData } from "./global";
+import request from "./openApiRequest";
+&nbsp;
+import sleep from './sleep';
+&nbsp;
+&nbsp;
+interface ISetDeviceOnboardingDeployProps {
+  ssid: string;
+  password: string;
+  timeout: number;
+  isBind?: boolean;
+  softAPSSIDPrefix: string;
+}
+&nbsp;
+interface IDevice {
+  mac: string;
+  product_key: string;
+  did: string;
+  name: string;
+  sno?: string;
+  manufacturer?: any;
+  alias?: string;
+  onlineStatus: boolean;
+  netStatus: number;
+  isSubscribed?: boolean;
+  meshID?: string;
+  isBind?: boolean;
+  isOnline?: boolean;
+  remark?: string;
+  siteGid: string;
+  id?: string;
+}
+&nbsp;
+interface IErr {
+  errorCode: Symbol;
+  errorMessage: string;
+}
+&nbsp;
+interface IResult {
+  success: boolean;
+  data?: IDevice | null;
+  err?: IErr;
+}
+&nbsp;
+interface ITarget {
+  serviceType: string;
+  serviceName: string;
+  ip: string;
+  port: number;
+}
+&nbsp;
+interface configDeviceParamse {
+  ssid: string; password: string; softAPSSIDPrefix: string;
+}
+&nbsp;
+interface ISDK {
+  appID: string;
+  appSecret: string;
+  timeoutHandler: any;
+  disableSendUDP: any;
+  configDevice({ ssid, password, softAPSSIDPrefix }: configDeviceParamse, target: ITarget): any;
+  setDeviceOnboardingDeploy({
+    ssid, password, timeout, isBind }: ISetDeviceOnboardingDeployProps): any;
+  stopDeviceOnboardingDeploy(): void;
+}
+&nbsp;
+interface ICloudServiceInfo {
+  openAPIInfo: string;
+}
+&nbsp;
+interface IProps {
+  appID: string;
+  appSecret: string;
+  specialProductKeys: string[];
+  specialProductKeySecrets: string[];
+  cloudServiceInfo: ICloudServiceInfo | null;
+  token: string;
+  uid: string;
+}
+&nbsp;
+class SDK implements ISDK {
+  constructor({ appID, appSecret, specialProductKeys, specialProductKeySecrets, cloudServiceInfo, token, uid }: IProps) {
+&nbsp;
+    this.appID = appID;
+    this.appSecret = appSecret;
+    this.specialProductKeys = specialProductKeys;
+    this.specialProductKeySecrets = specialProductKeySecrets;
+    this.token = token;
+    this.uid = uid;
+&nbsp;
+    // 保存相关信息
+    setGlobalData('appID', appID);
+    setGlobalData('appSecret', appSecret);
+    setGlobalData('specialProductKeys', specialProductKeys);
+    setGlobalData('specialProductKeySecrets', specialProductKeySecrets);
+    setGlobalData('token', token);
+    setGlobalData('uid', uid);
+&nbsp;
+&nbsp;
+    /**
+     * 同时也设置域名信息
+     */
+    this.setDomain(cloudServiceInfo);
+&nbsp;
+    // 监听服务发现
+    wx.onLocalServiceFound((data: any) =&gt; {
+      this.onFoundService &amp;&amp; this.onFoundService(data);
+    });
+  }
+&nbsp;
+  appID: string = '';
+  appSecret: string = '';
+  token: string = '';
+  uid: string = '';
+&nbsp;
+  UDPSocketHandler: any = null;
+  disableSendUDP: boolean = false;
+  // onLocalServiceFound 的callback
+  onFoundService: any;
+&nbsp;
+  // 配网超时
+  timeoutHandler: any = null;
+  sendMessageInterval: any = null;
+  specialProductKeys: string[] = [];
+  specialProductKeySecrets: string[] = [];
+&nbsp;
+&nbsp;
+  disableSearchDevice: boolean = false;
+  setDeviceOnboardingDeployRej: any; // 保存promise的res，用于临时中断
+&nbsp;
+  /**
+   * 设置域名
+   */
+  setDomain = (cloudServiceInfo: ICloudServiceInfo | null) =&gt; {
+    if (cloudServiceInfo &amp;&amp; cloudServiceInfo.openAPIInfo) {
+&nbsp;
+    } else {
+      cloudServiceInfo = {
+        openAPIInfo: 'api.gizwits.com',
+      };
+    }
+    setGlobalData('cloudServiceInfo', cloudServiceInfo);
+  }
+&nbsp;
+  /**
+   * 负责发指令
+   */
+  configDevice = (
+    { ssid, password, softAPSSIDPrefix }: configDeviceParamse,
+    target: ITarget
+  ): Promise&lt;IResult&gt; =&gt; {
+    return new Promise((res, rej) =&gt; {
+      // console.log('start config device');
+      let searchingDevice = false;
+&nbsp;
+      const header = [0, 0, 0, 3];
+      let length: number[] = [];
+      const flag = [0];
+      const cmd = [0, 1];
+      const ssidLength = [0, ssid.length];
+      const passwordLength = [0, password.length];
+&nbsp;
+      let ASSID: number[] = [];
+      for (let i = 0; i &lt; ssid.length; i++) {
+        ASSID.push(ssid[i].charCodeAt(0));
+      }
+&nbsp;
+      let APassword: number[] = [];
+      for (let i = 0; i &lt; password.length; i++) {
+        APassword.push(password[i].charCodeAt(0));
+      }
+&nbsp;
+      const content = flag.concat(cmd, ssidLength, ASSID, passwordLength, APassword);
+      // length = content.length.toString(16);
+&nbsp;
+      let contentLength = content.length;
+      while (contentLength &gt; 0) {
+        length.push(contentLength);
+        contentLength -= 255;
+      }
+&nbsp;
+      const config = header.concat(length).concat(content);
+      // console.log('发送指令给设备', config);
+      const buffer = new ArrayBuffer(config.length);
+      const uint8Array = new Uint8Array(buffer)
+      for (let i = 0; i &lt; buffer.byteLength; i++) {
+        uint8Array[i] = config[i];
+      }
+      /**
+       * 连接socket 发送
+       */
+      this.UDPSocketHandler = wx.createUDPSocketHandler();
+      this.UDPSocketHandler.bind();
+&nbsp;
+      this.disableSendUDP = false;
+&nbsp;
+      /**
+       * TODO
+       * 收到设备回的包后终止
+       * 或者超时
+       * 或者成功
+       */
+      const sendMessage = () =&gt; {
+        try {
+          !this.disableSendUDP &amp;&amp; this.UDPSocketHandler.send({
+            address: target.ip,
+            port: target.port,
+            message: uint8Array,
+            offset: 0,
+            length: uint8Array.byteLength,
+          });
+        } catch (error) {
+          // console.log('sendMessage', error);
+        }
+        // setTimeout(() =&gt; {
+        //   sendMessage();
+        // }, 2000)
+      }
+&nbsp;
+      // 执行
+      this.sendMessageInterval = setInterval(() =&gt; {
+        sendMessage();
+      }, 2000);
+&nbsp;
+      this.UDPSocketHandler.onError((data: any) =&gt; {
+        // console.log('on udp Error', data);
+        // UDPSocketHandler.close();
+        this.clean();
+        rej({
+          success: false,
+          err: {
+            errorCode: errorCode.WECHAT_ERROR,
+            errorMessage: data.errMsg
+          }
+        } as IResult);
+      });
+&nbsp;
+      // 清理一些监听，调用搜索设备
+      const searchDeviceHandle = async () =&gt; {
+        if (searchingDevice) return;
+        // console.log('searchDeviceHandle');
+        this.UDPSocketHandler.offMessage();
+        this.UDPSocketHandler.offError();
+        this.sendMessageInterval &amp;&amp; clearInterval(this.sendMessageInterval);
+        this.disableSendUDP = true;
+        // 标记可以停止监听
+        searchingDevice = true;
+        // 关闭socket
+        try {
+          const devicesReturn = await this.searchDevice({ ssid, password });
+          res(devicesReturn);
+        } catch (error) {
+          rej(error);
+        }
+      }
+&nbsp;
+      this.UDPSocketHandler.onMessage(() =&gt; {
+        // console.log('on udp Message', data);
+        // 收到回调 可以停止发包
+        searchDeviceHandle();
+      });
+&nbsp;
+      // 没有收到udp回复的时候不进入配网
+      wx.onNetworkStatusChange(async () =&gt; {
+        // 发生网络切换的时候也停止发包，进入大循环配网
+        // 搜索中的时候不要重复搜索
+        !searchingDevice &amp;&amp; wx.getConnectedWifi({
+          success: async (data) =&gt; {
+            /**
+             * 检查当前网络还是不是热点网络
+             */
+            data.wifi.SSID.indexOf(softAPSSIDPrefix) === -1 &amp;&amp; searchDeviceHandle();
+          }
+        });
+      });
+    });
+  }
+&nbsp;
+  /**
+   * 大循环确认
+   */
+  searchDevice = ({ ssid, password }: { ssid: string, password: string }): Promise&lt;IResult&gt; =&gt; {
+    return new Promise((res, rej) =&gt; {
+      // 连续发起请求 确认大循环
+      const codes = getRandomCodes({ SSID: ssid, password: password, pks: this.specialProductKeys });
+      let codeStr = '';
+      codes.map(item =&gt; {
+        codeStr += `${item},`
+      })
+      codeStr = codeStr.substring(0, codeStr.length - 1);
+      const query = async () =&gt; {
+        let data: any = {};
+        try {
+          data = await request(`/app/device_register?random_codes=${codeStr}`, { method: 'get' });
+          if (data.data.length === 0) {
+            // 重新请求
+            await sleep(3000);
+            !this.disableSearchDevice &amp;&amp; query();
+          } else {
+            // 搜索到设备
+            res({
+              success: true,
+              data: data.data
+            } as IResult);
+          }
+        } catch (error) {
+          rej({
+            success: false,
+            err: {
+              errorCode: errorCode.API_ERROR,
+              errorMessage: 'api error',
+            },
+          } as IResult);
+        }
+      }
+      query();
+    });
+  }
+&nbsp;
+  /**
+   * 配网接口
+   * setDeviceOnboardingDeploy方法不可重复调用
+   */
+  setDeviceOnboardingDeploy = ({
+    ssid, password, timeout, isBind = true, softAPSSIDPrefix }: ISetDeviceOnboardingDeployProps): Promise&lt;IResult&gt; =&gt; {
+    return new Promise((res, rej) =&gt; {
+      if (this.timeoutHandler) {
+        // 方法还在执行中
+        rej({
+          success: false,
+          err: {
+            errorCode: errorCode.EXECUTING,
+            errorMessage: 'executing',
+          }
+        } as IResult);
+        return;
+      }
+      this.clean();
+      this.setDeviceOnboardingDeployRej = rej;
+      this.disableSearchDevice = false;
+      /**
+       * 设置超时时间
+       */
+      this.timeoutHandler = setTimeout(() =&gt; {
+        rej({
+          success: false,
+          err: {
+            errorCode: errorCode.TIME_OUT,
+            errorMessage: 'time out',
+          } as IErr
+        } as IResult);
+        this.clean();
+      }, timeout * 1000);
+&nbsp;
+      /**
+       * 发现设备
+       * 注册onFoundService 监听发现回掉
+       */
+      this.onFoundService = async (data: ITarget) =&gt; {
+        // 找到服务 发送指令 
+        // console.log('onLocalServiceFound', data);
+        // 停止发现
+        this.onFoundService = null;
+        try {
+          const result = await this.configDevice({ ssid, password, softAPSSIDPrefix }, data);
+          if (isBind) {
+            try {
+              await this.bindDevices(result.data as unknown as IDevice[]);
+              res({
+                success: true,
+                data: result.data,
+              } as IResult);
+            } catch (error) {
+              rej({
+                success: false,
+                err: {
+                  errorCode: errorCode.BIND_FAIL,
+                  errorMessage: '绑定失败'
+                }
+              } as IResult);
+            }
+          } else {
+            // 不需要绑定 直接返回成功
+            res({
+              success: true,
+              data: result.data,
+            } as IResult);
+          }
+        } catch (error) {
+          // console.log('configDevice', error);
+          rej(error);
+        } finally {
+          this.clean();
+        }
+      }
+&nbsp;
+      wx.stopLocalServiceDiscovery({
+        complete: () =&gt; {
+          wx.startLocalServiceDiscovery({
+            serviceType: '_local._udp',
+            success: () =&gt; {
+              // 调用发现成功
+              // console.log('找到MDNS服务', data);
+            },
+            fail: (err) =&gt; {
+              // 调用发现失败
+              rej({
+                success: false,
+                err: {
+                  errorCode: errorCode.WECHAT_ERROR,
+                  errorMessage: err.errMsg
+                }
+              } as IResult);
+              this.clean();
+            },
+          });
+        }
+      });
+    });
+  }
+&nbsp;
+  /**
+   * 绑定多个设备
+   */
+  bindDevices = (devices: IDevice[]): Promise&lt;IResult&gt; =&gt; {
+    return new Promise(async (res, rej) =&gt; {
+      const promises: Promise&lt;IResult&gt;[] = [];
+&nbsp;
+      let timestamp = Date.parse(`${new Date()}`);
+      timestamp = timestamp / 1000;
+&nbsp;
+      devices.map(item =&gt; {
+        const index = this.specialProductKeys.findIndex(pk =&gt; item.product_key === pk);
+        if (index === -1) return;
+        const ps = this.specialProductKeySecrets[index];
+        const promise = request(
+          '/app/bind_mac',
+          {
+            method: 'POST',
+            headers: {
+              'X-Gizwits-Timestamp': timestamp,
+              'X-Gizwits-Signature': MD5(`${ps}${timestamp}`).toLowerCase(),
+            },
+            data: {
+              "product_key": item.product_key,
+              "mac": item.mac,
+              "remark": "",
+              "dev_alias": ""
+            }
+          },
+        );
+        promises.push(promise);
+      });
+&nbsp;
+      try {
+        const data = await Promise.all(promises);
+        const returnData: any = [];
+        data.map((item: any) =&gt; {
+          item.success &amp;&amp; returnData.push(item.data);
+        })
+        res({
+          success: true,
+          data: returnData,
+        });
+      } catch (error) {
+        rej(error);
+      }
+    });
+  }
+&nbsp;
+  /**
+   * 清除一些timeout等
+   */
+  clean = (): void =&gt; {
+    this.timeoutHandler &amp;&amp; clearTimeout(this.timeoutHandler);
+    this.sendMessageInterval &amp;&amp; clearInterval(this.sendMessageInterval);
+    this.timeoutHandler = null;
+    this.sendMessageInterval = null;
+    this.setDeviceOnboardingDeployRej = null;
+    this.onFoundService = null;
+    wx.stopLocalServiceDiscovery();
+    this.disableSearchDevice = true;
+    if (this.UDPSocketHandler) {
+      this.UDPSocketHandler.offError();
+      this.UDPSocketHandler.offMessage();
+      this.UDPSocketHandler.close();
+    }
+  }
+&nbsp;
+  /**
+   * 停止配网
+   */
+  stopDeviceOnboardingDeploy = (): void =&gt; {
+    if (this.setDeviceOnboardingDeployRej) {
+      this.setDeviceOnboardingDeployRej({
+        success: false,
+        err: {
+          errorCode: errorCode.STOP,
+          errorMessage: '手动停止'
+        }
+      });
+    }
+    this.clean();
+  }
+}
+&nbsp;
+// const sdk = new SDK({appID: '', appSecret: ''});
+// sdk.sendConfig({ssid: 'gizwits', password: 'giz$2025'}, {} as any);
+export default SDK;
+&nbsp;
+export { IResult };</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="https://istanbul.js.org/" target="_blank">istanbul</a> at Sat Mar 28 2020 14:43:16 GMT+0800 (GMT+08:00)
+</div>
+</div>
+<script src="../../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../../sorter.js"></script>
+</body>
+</html>

@@ -1,5 +1,6 @@
-import md5 = require('./md5');
-import AES = require('./aes');
+import * as md5 from 'js-md5';
+import * as AES from 'aes-js';
+
 
 interface IGetRandomCodes {
   SSID: string;

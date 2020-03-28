@@ -14,7 +14,7 @@ const openApiRequest = (url: string, options: any): Promise<IResult> => {
 
   requestOptions.header = { ...headers, ...options.headers };
   delete requestOptions.headers;
-  console.log(`openApi request ${url}`, requestOptions);
+  // console.log(`openApi request ${url}`, requestOptions);
   const openApiUrl = getGlobalData('cloudServiceInfo').openAPIInfo;
   return request('https://' + openApiUrl + url, requestOptions);
 }
