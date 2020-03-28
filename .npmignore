@@ -1,0 +1,11 @@
+.DS_Store
+.git
+.npmrc
+tests
+typings
+src
+coverage
+global.d.ts
+index.ts
+tsconfig.json
+webpack.config.js
