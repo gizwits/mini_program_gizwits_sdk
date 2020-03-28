@@ -1,14 +1,14 @@
-![npm](https://img.shields.io/npm/v/mini_program_gizwits_sdk)
+<a href='https://coveralls.io/github/gizwits/mini_program_gizwits_sdk?branch=master'><img src='https://coveralls.io/repos/github/gizwits/mini_program_gizwits_sdk/badge.svg?branch=master' alt='Coverage Status' /></a><img alt="npm" src="https://img.shields.io/npm/v/mini_program_gizwits_sdk">[![Build Status](https://travis-ci.org/gizwits/mini_program_gizwits_sdk.svg?branch=master)](https://travis-ci.org/gizwits/mini_program_gizwits_sdk)
 
 # 小程序配网SDK
 
 ### 安装
 
-yarn add mini_program_gizwits_sdk
+`yarn add mini_program_gizwits_sdk`
 
 ### 使用方法
 
-```
+```javascript
 import GizwitsSdk, { errorCode } from 'mini_program_gizwits_sdk';
 
 const sdk = new GizwitsSdk({
@@ -33,7 +33,7 @@ const data = await sdk.setDeviceOnboardingDeploy({
 
 如果失败的话会返回数据
 
-```
+```javascript
 {
   success: false,
   err: {
