@@ -1,3 +1,5 @@
+![npm](https://img.shields.io/npm/v/mini_program_gizwits_sdk)
+
 # 小程序配网SDK
 
 ### 安装
