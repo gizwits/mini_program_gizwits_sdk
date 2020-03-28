@@ -4,11 +4,11 @@
 
 ### 安装
 
-yarn add mini_program_gizwits_sdk
+`yarn add mini_program_gizwits_sdk`
 
 ### 使用方法
 
-```
+```javascript
 import GizwitsSdk, { errorCode } from 'mini_program_gizwits_sdk';
 
 const sdk = new GizwitsSdk({
@@ -33,7 +33,7 @@ const data = await sdk.setDeviceOnboardingDeploy({
 
 如果失败的话会返回数据
 
-```
+```javascript
 {
   success: false,
   err: {
