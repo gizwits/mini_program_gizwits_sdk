@@ -6,7 +6,8 @@
   "scripts": {
     "test": "node_modules/mocha/bin/_mocha -r ts-node/register tests/**/*.spec.ts -file ./tests/setup-wx.js -timeout 60s",
     "build": "webpack",
-    "cover": "istanbul cover node_modules/mocha/bin/_mocha -- -r ts-node/register tests/**/*.spec.ts -file ./tests/setup-wx.js -timeout 60s"
+    "cover": "istanbul cover node_modules/mocha/bin/_mocha -- -r ts-node/register tests/**/*.spec.ts -file ./tests/setup-wx.js -timeout 60s",
+    "coveralls": "npm run cover -- --report lcovonly && cat ./coverage/lcov.info | coveralls"
   },
   "repository": {
     "type": "git",
