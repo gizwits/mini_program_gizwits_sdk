@@ -1,4 +1,7 @@
-![npm](https://img.shields.io/npm/v/mini_program_gizwits_sdk)
+<a href='https://coveralls.io/github/gizwits/mini_program_gizwits_sdk?branch=master'><img src='https://coveralls.io/repos/github/gizwits/mini_program_gizwits_sdk/badge.svg?branch=master' alt='Coverage Status' /></a>
+
+
+<img alt="npm" src="https://img.shields.io/npm/v/mini_program_gizwits_sdk">
 
 # 小程序配网SDK
 
