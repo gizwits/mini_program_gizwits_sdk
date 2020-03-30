@@ -1,6 +1,6 @@
 {
   "name": "mini_program_gizwits_sdk",
-  "version": "1.0.49",
+  "version": "2.0.0",
   "description": "小程序配网sdk",
   "main": "./dist/index.js",
   "scripts": {
