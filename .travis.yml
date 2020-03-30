@@ -18,7 +18,6 @@ deploy:
     secure: GrkNtVOo77beuB+ZyMWIeXQa2rYJtpstJYBX7aLQlg7Fb/yvlOywIARI+sW4RmvnrIOVYwVwhX24m9Jq2B/IU6ToiH5LNKeqLVeBaZmcYE2ribl3XkImzO6ZJLDEvMA7/cW8ZP6Pqm5rd1H5xHLYrwe6cwyp4S2LH8FF8scf3HVlDLlkpK+umMgep6nMgXSV0GVz0lrHfFEECvEY4UAuS/gZb9bPk8N8WMW8oqIZHP+yJ/floDopAAEJ+iCvl6SdykZjwmIQf0ZI/l6glgEUITGiai3CYkGcoyENm/itQC0y+wtZhjQmKyHI0zznwswnj33DE2kUla0BLu0P2mW78hlHEKwgdpvbZGlPnS94MTZ7qPkDtHwujJz7/oy54AiNR5LWYdUxLby7n495PKO+eJjYa/zuwjMRavLY86bZIsHTzHTjOVutD9IfsbyeAOSGeowuA3sw5n24R7CmG2oDCbGaQznXayWCcnZteJqLmFmY5B15v3QfcOM5dX/QqLUEZOy6l10bXXElnGqsWLs8Te2a6WeT5TmxqAKA+ljPMzcp7E2jIAiLny7EcRN7yxnTXVO8cVJ42MHlFX93TlFNJlWBi663dV2imb6xi2gK6m66OWgH7pfx32l8PhsAtv9mI43ADRWrRd7E5/jy1hgPbar6dDaDK4tR/gtunWh6KgQ=
   skip_cleanup: true
   on:
-    tags: true
     branch: master
   tag: next
   condition: "$TRAVIS_TAG =~ ^v[0-9]+.[0-9]+.[0-9]+$"
