@@ -250,12 +250,8 @@ class SDK implements ISDK {
         // 标记可以停止监听
         searchingDevice = true;
         // 关闭socket
-        try {
-          const devicesReturn = await this.searchDevice({ ssid, password });
-          res(devicesReturn);
-        } catch (error) {
-          rej(error);
-        }
+        const devicesReturn = await this.searchDevice({ ssid, password });
+        res(devicesReturn);
       }
 
       this.UDPSocketHandler.onMessage(() => {
