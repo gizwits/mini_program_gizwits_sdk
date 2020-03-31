@@ -284,7 +284,7 @@ class SDK implements ISDK {
    * 大循环确认
    */
   searchDevice = ({ ssid, password }: { ssid: string, password: string }): Promise<IResult> => {
-    return new Promise((res, rej) => {
+    return new Promise((res) => {
       // 连续发起请求 确认大循环
       console.log('search device');
       const codes = getRandomCodes({ SSID: ssid, password: password, pks: this.specialProductKeys });
@@ -310,13 +310,7 @@ class SDK implements ISDK {
             } as IResult);
           }
         } catch (error) {
-          rej({
-            success: false,
-            err: {
-              errorCode: errorCode.API_ERROR,
-              errorMessage: 'api error',
-            },
-          } as IResult);
+          console.log('error', error);
         }
       }
       query();
