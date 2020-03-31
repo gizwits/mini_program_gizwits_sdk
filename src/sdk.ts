@@ -310,6 +310,9 @@ class SDK implements ISDK {
             } as IResult);
           }
         } catch (error) {
+          // 重新请求
+          await sleep(3000);
+          !this.disableSearchDevice && query();
           console.log('error', error);
         }
       }
