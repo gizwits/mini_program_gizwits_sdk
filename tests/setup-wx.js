@@ -23,7 +23,7 @@ global.wx = {
   createUDPSocketHandlerOnMessageHandle: null,
   createUDPSocketHandlerOnErrorHandle: null,
 
-  createUDPSocketHandler: () => {
+  createUDPSocket: () => {
     return {
       send: () => {},
       bind: () => {},

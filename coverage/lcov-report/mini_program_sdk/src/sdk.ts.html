@@ -536,7 +536,21 @@
 511
 512
 513
-514</td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+514
+515
+516
+517
+518
+519
+520
+521
+522
+523
+524
+525
+526
+527
+528</td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -691,7 +705,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">8x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8x</span>
 <span class="cline-any cline-yes">8x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">8x</span>
@@ -744,6 +758,7 @@
 <span class="cline-any cline-yes">8x</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -827,12 +842,14 @@
 <span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
@@ -936,11 +953,19 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-yes">12x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">12x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -950,9 +975,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1019,7 +1041,13 @@
 <span class="cline-any cline-yes">27x</span>
 <span class="cline-any cline-yes">27x</span>
 <span class="cline-any cline-yes">27x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">27x</span>
+<span class="cline-any cline-yes">27x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">27x</span>
 <span class="cline-any cline-yes">27x</span>
 <span class="cline-any cline-yes">24x</span>
@@ -1204,7 +1232,7 @@ class SDK implements ISDK {
     target: ITarget
   ): Promise&lt;IResult&gt; =&gt; {
     return new Promise((res, rej) =&gt; {
-      // console.log('start config device');
+      console.log('start config device');
       let searchingDevice = false;
 &nbsp;
       const header = [0, 0, 0, 3];
@@ -1243,7 +1271,7 @@ class SDK implements ISDK {
       /**
        * 连接socket 发送
        */
-      this.UDPSocketHandler = wx.createUDPSocketHandler();
+      this.UDPSocketHandler = wx.createUDPSocket();
       this.UDPSocketHandler.bind();
 &nbsp;
       this.disableSendUDP = false;
@@ -1255,6 +1283,7 @@ class SDK implements ISDK {
        * 或者成功
        */
       const sendMessage = () =&gt; {
+        console.log('send MSG', uint8Array);
         try {
           !this.disableSendUDP &amp;&amp; this.UDPSocketHandler.send({
             address: target.ip,
@@ -1336,6 +1365,7 @@ class SDK implements ISDK {
   searchDevice = ({ ssid, password }: { ssid: string, password: string }): Promise&lt;IResult&gt; =&gt; {
     return new Promise((res, rej) =&gt; {
       // 连续发起请求 确认大循环
+      console.log('search device');
       const codes = getRandomCodes({ SSID: ssid, password: password, pks: this.specialProductKeys });
       let codeStr = '';
       codes.map(item =&gt; {
@@ -1346,6 +1376,7 @@ class SDK implements ISDK {
         let data: any = {};
         try {
           data = await request(`/app/device_register?random_codes=${codeStr}`, { method: 'get' });
+          console.log('searchDeviceResult', data);
           if (data.data.length === 0) {
             // 重新请求
             await sleep(3000);
@@ -1448,28 +1479,33 @@ class SDK implements ISDK {
         }
       }
 &nbsp;
-      wx.stopLocalServiceDiscovery({
-        complete: () =&gt; {
-          wx.startLocalServiceDiscovery({
-            serviceType: '_local._udp',
-            success: () =&gt; {
-              // 调用发现成功
-              // console.log('找到MDNS服务', data);
-            },
-            fail: (err) =&gt; {
-              // 调用发现失败
-              rej({
-                success: false,
-                err: {
-                  errorCode: errorCode.WECHAT_ERROR,
-                  errorMessage: err.errMsg
-                }
-              } as IResult);
-              this.clean();
-            },
-          });
-        }
-      });
+      try {
+        wx.stopLocalServiceDiscovery({
+          complete: () =&gt; {
+            wx.startLocalServiceDiscovery({
+              serviceType: '_local._udp',
+              success: (data) =&gt; {
+                // 调用发现成功
+                console.log('找到MDNS服务', data);
+              },
+              fail: (err) =&gt; {
+                // 调用发现失败
+                rej({
+                  success: false,
+                  err: {
+                    errorCode: errorCode.WECHAT_ERROR,
+                    errorMessage: err.errMsg
+                  }
+                } as IResult);
+                this.clean();
+              },
+            });
+          },
+        });
+      } catch (error) {
+        
+      }
+      
     });
   }
 &nbsp;
@@ -1532,7 +1568,13 @@ class SDK implements ISDK {
     this.sendMessageInterval = null;
     this.setDeviceOnboardingDeployRej = null;
     this.onFoundService = null;
-    wx.stopLocalServiceDiscovery();
+&nbsp;
+    try {
+      wx.stopLocalServiceDiscovery({});
+    } catch (error) {
+      
+    }
+&nbsp;
     this.disableSearchDevice = true;
     if (this.UDPSocketHandler) {
       this.UDPSocketHandler.offError();
@@ -1568,7 +1610,7 @@ export { IResult };</pre></td></tr>
 </div><!-- /wrapper -->
 <div class='footer quiet pad2 space-top1 center small'>
   Code coverage
-  generated by <a href="https://istanbul.js.org/" target="_blank">istanbul</a> at Sat Mar 28 2020 14:43:16 GMT+0800 (GMT+08:00)
+  generated by <a href="https://istanbul.js.org/" target="_blank">istanbul</a> at Tue Mar 31 2020 17:08:54 GMT+0800 (GMT+08:00)
 </div>
 </div>
 <script src="../../prettify.js"></script>

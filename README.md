@@ -21,12 +21,16 @@ const sdk = new GizwitsSdk({
   cloudServiceInfo: null,
 });
 
-const data = await sdk.setDeviceOnboardingDeploy({
-  ssid: SSID,
-  password: password,
-  timeout: 60,
-  softAPSSIDPrefix: 'XPG-GAgent-',
-});
+try {
+  const data = await sdk.setDeviceOnboardingDeploy({
+    ssid: SSID,
+    password: password,
+    timeout: 60,
+    softAPSSIDPrefix: 'XPG-GAgent-',
+  });
+} catch (error) {
+  console.log(error)
+}
 ```
 
 其中`data`代表配网成功的设备。
