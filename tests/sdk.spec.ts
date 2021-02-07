@@ -41,10 +41,11 @@ describe('SDK', function () {
           timeout: 1,
           softAPSSIDPrefix: 'XPG-GAgent-',
         });
+        console.debug(data)
         const isOk = (data as any).err.errorCode === errorCode.TIME_OUT;
         assert.ok(isOk);
       } catch (error) {
-        
+        console.error(error)
       }
     });
 
@@ -217,11 +218,11 @@ describe('SDK', function () {
         });
         assert.ok((data as any).err.errorCode === errorCode.TIME_OUT);
       } catch (error) {
-        
+        console.error(error)
       }
     });
 
-    // 发现接口报错
+    // 绑定接口报错
     it('should bindDevice error', async function () {
 
       global.wx.bindResult = {
@@ -254,6 +255,7 @@ describe('SDK', function () {
         });
       } catch (error) {
         assert.ok((error as any).err.errorCode === errorCode.BIND_FAIL);
+        console.error(error)
       }
     });
 

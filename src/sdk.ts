@@ -167,7 +167,7 @@ class SDK implements ISDK {
     target: ITarget
   ): Promise<IResult> => {
     return new Promise((res, rej) => {
-      console.log('start config device');
+      console.debug('start config device');
       let searchingDevice = false;
 
       const header = [0, 0, 0, 3];
@@ -201,7 +201,6 @@ class SDK implements ISDK {
       }
 
       const config = header.concat(length).concat(content);
-      console.log('send config package', config);
       const buffer = new ArrayBuffer(config.length);
       const uint8Array = new Uint8Array(buffer)
       for (let i = 0; i < buffer.byteLength; i++) {
@@ -222,7 +221,6 @@ class SDK implements ISDK {
        * 或者成功
        */
       const sendMessage = () => {
-        console.log('send MSG', uint8Array);
         try {
           !this.disableSendUDP && this.UDPSocketHandler.send({
             address: target.ip,
@@ -300,7 +298,6 @@ class SDK implements ISDK {
   searchDevice = ({ ssid, password }: { ssid: string, password: string }): Promise<IResult> => {
     return new Promise((res) => {
       // 连续发起请求 确认大循环
-      console.log('search device');
       const codes = getRandomCodes({ SSID: ssid, password: password, pks: this.specialProductKeys });
       let codeStr = '';
       codes.map(item => {
@@ -311,7 +308,7 @@ class SDK implements ISDK {
         let data: any = {};
         try {
           data = await request(`/app/device_register?random_codes=${codeStr}`, { method: 'get' });
-          console.log('searchDeviceResult', data);
+          console.debug('searchDeviceResult', data);
           if (data.data.length === 0) {
             // 重新请求
             await sleep(3000);
@@ -327,7 +324,7 @@ class SDK implements ISDK {
           // 重新请求
           await sleep(3000);
           !this.disableSearchDevice && query();
-          console.log('error', error);
+          console.debug('error', error);
         }
       }
       query();
@@ -392,7 +389,7 @@ class SDK implements ISDK {
                 success: false,
                 err: {
                   errorCode: errorCode.BIND_FAIL,
-                  errorMessage: '绑定失败'
+                  errorMessage: JSON.stringify(error.err)
                 }
               } as IResult);
             }
@@ -418,7 +415,7 @@ class SDK implements ISDK {
               serviceType: '_local._udp',
               success: (data) => {
                 // 调用发现成功
-                console.log('find MDNS', data);
+                console.debug('find MDNS', data);
               },
               fail: (err) => {
                 // 调用发现失败
