@@ -167,7 +167,7 @@ class SDK implements ISDK {
     target: ITarget
   ): Promise<IResult> => {
     return new Promise((res, rej) => {
-      console.debug('start config device');
+      console.debug('GIZ_SDK: start config device');
       let searchingDevice = false;
 
       const header = [0, 0, 0, 3];
@@ -266,8 +266,12 @@ class SDK implements ISDK {
         // 标记可以停止监听
         searchingDevice = true;
         // 关闭socket
-        const devicesReturn = await this.searchDevice({ ssid, password });
-        res(devicesReturn);
+        try {
+          const devicesReturn = await this.searchDevice({ ssid, password });
+          res(devicesReturn);
+        } catch (error) {
+          rej(error)
+        }
       }
 
       this.UDPSocketHandler.onMessage(() => {
@@ -296,25 +300,29 @@ class SDK implements ISDK {
    * 大循环确认
    */
   searchDevice = ({ ssid, password }: { ssid: string, password: string }): Promise<IResult> => {
-    return new Promise((res) => {
+    return new Promise((res, rej) => {
       // 连续发起请求 确认大循环
       const codes = getRandomCodes({ SSID: ssid, password: password, pks: this.specialProductKeys });
+      console.debug('params', ssid, password, this.specialProductKeys)
+      console.debug('codes', codes)
       let codeStr = '';
       codes.map(item => {
         codeStr += `${item},`
       })
       codeStr = codeStr.substring(0, codeStr.length - 1);
+      console.debug('codeStr', codeStr)
       const query = async () => {
         let data: any = {};
         try {
           data = await request(`/app/device_register?random_codes=${codeStr}`, { method: 'get' });
-          console.debug('searchDeviceResult', data);
+          console.log('GIZ_SDK: try get device random codes', data);
           if (data.data.length === 0) {
             // 重新请求
             await sleep(3000);
             !this.disableSearchDevice && query();
           } else {
             // 搜索到设备
+            console.log('GIZ_SDK: config device success', data.data)
             res({
               success: true,
               data: data.data
@@ -322,9 +330,19 @@ class SDK implements ISDK {
           }
         } catch (error) {
           // 重新请求
+          if (error.err.error_code === '9004') {
+            // token 失效
+            rej({
+              success: false,
+              err: {
+                errorCode: errorCode.API_ERROR,
+                errorMessage: JSON.stringify(error.err),
+              }
+            } as IResult);
+          }
           await sleep(3000);
           !this.disableSearchDevice && query();
-          console.debug('error', error);
+          console.debug('GIZ_SDK: random codes error', error);
         }
       }
       query();
@@ -380,16 +398,19 @@ class SDK implements ISDK {
           if (isBind) {
             try {
               await this.bindDevices(result.data as unknown as IDevice[]);
+              console.log('GIZ_SDK: bind device success', result.data)
               res({
                 success: true,
                 data: result.data,
               } as IResult);
             } catch (error) {
+              console.log('GIZ_SDK: bind device error', error.err)
               rej({
                 success: false,
                 err: {
                   errorCode: errorCode.BIND_FAIL,
-                  errorMessage: JSON.stringify(error.err)
+                  errorMessage: JSON.stringify(error.err),
+                  devices: result.data // 返回绑定失败的设备
                 }
               } as IResult);
             }
@@ -415,7 +436,7 @@ class SDK implements ISDK {
               serviceType: '_local._udp',
               success: (data) => {
                 // 调用发现成功
-                console.debug('find MDNS', data);
+                console.debug('GIZ_SDK: find MDNS', data);
               },
               fail: (err) => {
                 // 调用发现失败
@@ -442,6 +463,7 @@ class SDK implements ISDK {
    * 绑定多个设备
    */
   bindDevices = (devices: IDevice[]): Promise<IResult> => {
+    console.log('GIZ_SDK: start bind device')
     return new Promise(async (res, rej) => {
       const promises: Promise<IResult>[] = [];
 

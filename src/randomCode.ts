@@ -43,7 +43,6 @@ const getRandomCode = ({ SSID, password, pk }: IGetRandomCode): string => {
   const aesEcb = new AES.ModeOfOperation.ecb(key);
   const encryptedBytes = aesEcb.encrypt(textBytes);
   const md5Str = md5.hex(encryptedBytes);
-  console.debug('getRandomCode' + 'pk:' + pk, ' code:' + md5Str)
   return md5Str;
 }
 
