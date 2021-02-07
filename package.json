@@ -1,7 +1,7 @@
 {
   "name": "mini_program_gizwits_sdk",
-  "version": "2.0.6",
-  "description": "小程序配网sdk",
+  "version": "2.0.6-bate-9",
+  "description": "修复中文编码问题",
   "main": "./dist/index.js",
   "scripts": {
     "test": "node_modules/mocha/bin/_mocha -r ts-node/register tests/**/*.spec.ts -file ./tests/setup-wx.js -timeout 60s",
@@ -19,18 +19,19 @@
     "sdk"
   ],
   "devDependencies": {
+    "@babel/plugin-transform-modules-commonjs": "^7.12.1",
     "@types/chai": "^4.2.11",
     "@types/mocha": "^7.0.2",
     "@types/node": "^12.12.14",
     "chai": "^4.2.0",
+    "coveralls": "^3.0.11",
     "istanbul": "^1.1.0-alpha.1",
     "mocha": "^7.1.1",
     "ts-loader": "^6.2.2",
     "ts-node": "^8.8.1",
     "typescript": "^3.8.3",
     "webpack": "^4.42.1",
-    "webpack-cli": "^3.3.11",
-    "coveralls": "^3.0.11"
+    "webpack-cli": "^3.3.11"
   },
   "author": "gizwits",
   "license": "ISC",
@@ -40,6 +41,7 @@
   "homepage": "https://github.com/gizwits/mini_program_gizwits_sdk#readme",
   "dependencies": {
     "aes-js": "^3.1.2",
-    "js-md5": "^0.7.3"
+    "js-md5": "^0.7.3",
+    "gbk-encode": "^1.0.1"
   }
 }

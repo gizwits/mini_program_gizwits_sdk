@@ -43,10 +43,10 @@ const getRandomCode = ({ SSID, password, pk }: IGetRandomCode): string => {
   const aesEcb = new AES.ModeOfOperation.ecb(key);
   const encryptedBytes = aesEcb.encrypt(textBytes);
   const md5Str = md5.hex(encryptedBytes);
+  console.log('getRandomCode' + 'pk:' + pk, ' code:' + md5Str)
   return md5Str;
 }
 
-// console.log(getRandomCodes({ SSID: 'gizwits', password: 'giz$2025', pks: ['162866a5336c4a92a7edba1a2b07b182'] }));
-
+// console.log(getRandomCodes({ SSID: '渣渣', password: '12345678', pks: ['af9c220080a04c568086407448ea36a1'] }));
 
 export default getRandomCodes;

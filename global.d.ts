@@ -26,3 +26,5 @@ declare namespace aesjs {
   const utils: TUtils;
   const ModeOfOperation: TModeOfOperation;
 }
+
+declare module "gbk-encode";

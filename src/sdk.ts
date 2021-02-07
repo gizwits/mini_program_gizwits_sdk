@@ -145,6 +145,20 @@ class SDK implements ISDK {
     setGlobalData('cloudServiceInfo', cloudServiceInfo);
   }
 
+  formatCode = (str) => {
+    let code: any = encodeURI(str)
+    let codes: number[] = [];
+    if (code.indexOf('%') !== -1 && str !== '%') {
+      // utf8
+      code = code.split('%').filter((item: any) => item !== '').map((item: string) => parseInt(item, 16));
+      codes = code;
+    } else {
+      code = code.charCodeAt(0);
+      codes = [code];
+    }
+    return codes;
+  }
+
   /**
    * 负责发指令
    */
@@ -160,17 +174,21 @@ class SDK implements ISDK {
       let length: number[] = [];
       const flag = [0];
       const cmd = [0, 1];
-      const ssidLength = [0, ssid.length];
-      const passwordLength = [0, password.length];
+      const ssidLength = [0, 0];
+      const passwordLength = [0, 0];
 
       let ASSID: number[] = [];
       for (let i = 0; i < ssid.length; i++) {
-        ASSID.push(ssid[i].charCodeAt(0));
+        const code = this.formatCode(ssid[i])
+        ssidLength[1] += code.length;
+        ASSID = ASSID.concat(code);
       }
 
       let APassword: number[] = [];
       for (let i = 0; i < password.length; i++) {
-        APassword.push(password[i].charCodeAt(0));
+        const code = this.formatCode(password[i])
+        passwordLength[1] += code.length;
+        APassword = APassword.concat(code);
       }
 
       const content = flag.concat(cmd, ssidLength, ASSID, passwordLength, APassword);
@@ -183,7 +201,7 @@ class SDK implements ISDK {
       }
 
       const config = header.concat(length).concat(content);
-      // console.log('发送指令给设备', config);
+      console.log('send config package', config);
       const buffer = new ArrayBuffer(config.length);
       const uint8Array = new Uint8Array(buffer)
       for (let i = 0; i < buffer.byteLength; i++) {
@@ -400,7 +418,7 @@ class SDK implements ISDK {
               serviceType: '_local._udp',
               success: (data) => {
                 // 调用发现成功
-                console.log('找到MDNS服务', data);
+                console.log('find MDNS', data);
               },
               fail: (err) => {
                 // 调用发现失败
