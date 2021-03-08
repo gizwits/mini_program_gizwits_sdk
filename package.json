@@ -1,7 +1,7 @@
 {
   "name": "mini_program_gizwits_sdk",
-  "version": "2.0.7",
-  "description": "修复中文编码 增加错误码",
+  "version": "2.0.8-rc.1",
+  "description": "固定softap 的ip和端口",
   "main": "./dist/index.js",
   "scripts": {
     "test": "node_modules/mocha/bin/_mocha -r ts-node/register tests/**/*.spec.ts -file ./tests/setup-wx.js -timeout 60s",

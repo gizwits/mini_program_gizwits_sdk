@@ -164,7 +164,6 @@ class SDK implements ISDK {
    */
   configDevice = (
     { ssid, password, softAPSSIDPrefix }: configDeviceParamse,
-    target: ITarget
   ): Promise<IResult> => {
     return new Promise((res, rej) => {
       console.debug('GIZ_SDK: start config device');
@@ -223,8 +222,8 @@ class SDK implements ISDK {
       const sendMessage = () => {
         try {
           !this.disableSendUDP && this.UDPSocketHandler.send({
-            address: target.ip,
-            port: target.port,
+            address: '10.10.100.254',
+            port: 12414,
             message: uint8Array,
             offset: 0,
             length: uint8Array.byteLength,
@@ -355,7 +354,7 @@ class SDK implements ISDK {
    */
   setDeviceOnboardingDeploy = ({
     ssid, password, timeout, isBind = true, softAPSSIDPrefix }: ISetDeviceOnboardingDeployProps): Promise<IResult> => {
-    return new Promise((res, rej) => {
+    return new Promise(async (res, rej) => {
       if (this.timeoutHandler) {
         // 方法还在执行中
         rej({
@@ -383,77 +382,40 @@ class SDK implements ISDK {
         } as IResult);
         this.clean();
       }, timeout * 1000);
-
-      /**
-       * 发现设备
-       * 注册onFoundService 监听发现回掉
-       */
-      this.onFoundService = async (data: ITarget) => {
-        // 找到服务 发送指令 
-        // console.log('onLocalServiceFound', data);
-        // 停止发现
-        this.onFoundService = null;
-        try {
-          const result = await this.configDevice({ ssid, password, softAPSSIDPrefix }, data);
-          if (isBind) {
-            try {
-              await this.bindDevices(result.data as unknown as IDevice[]);
-              console.log('GIZ_SDK: bind device success', result.data)
-              res({
-                success: true,
-                data: result.data,
-              } as IResult);
-            } catch (error) {
-              console.log('GIZ_SDK: bind device error', error.err)
-              rej({
-                success: false,
-                err: {
-                  errorCode: errorCode.BIND_FAIL,
-                  errorMessage: JSON.stringify(error.err),
-                  devices: result.data // 返回绑定失败的设备
-                }
-              } as IResult);
-            }
-          } else {
-            // 不需要绑定 直接返回成功
+      
+      try {
+        const result = await this.configDevice({ ssid, password, softAPSSIDPrefix });
+        if (isBind) {
+          try {
+            await this.bindDevices(result.data as unknown as IDevice[]);
+            console.log('GIZ_SDK: bind device success', result.data)
             res({
               success: true,
               data: result.data,
             } as IResult);
+          } catch (error) {
+            console.log('GIZ_SDK: bind device error', error.err)
+            rej({
+              success: false,
+              err: {
+                errorCode: errorCode.BIND_FAIL,
+                errorMessage: JSON.stringify(error.err),
+                devices: result.data // 返回绑定失败的设备
+              }
+            } as IResult);
           }
-        } catch (error) {
-          // console.log('configDevice', error);
-          rej(error);
-        } finally {
-          this.clean();
+        } else {
+          // 不需要绑定 直接返回成功
+          res({
+            success: true,
+            data: result.data,
+          } as IResult);
         }
-      }
-
-      try {
-        wx.stopLocalServiceDiscovery({
-          complete: () => {
-            wx.startLocalServiceDiscovery({
-              serviceType: '_local._udp',
-              success: (data) => {
-                // 调用发现成功
-                console.debug('GIZ_SDK: find MDNS', data);
-              },
-              fail: (err) => {
-                // 调用发现失败
-                rej({
-                  success: false,
-                  err: {
-                    errorCode: errorCode.WECHAT_ERROR,
-                    errorMessage: err.errMsg
-                  }
-                } as IResult);
-                this.clean();
-              },
-            });
-          },
-        });
       } catch (error) {
-        
+        // console.log('configDevice', error);
+        rej(error);
+      } finally {
+        this.clean();
       }
       
     });
@@ -520,11 +482,11 @@ class SDK implements ISDK {
     this.setDeviceOnboardingDeployRej = null;
     this.onFoundService = null;
 
-    try {
-      wx.stopLocalServiceDiscovery({});
-    } catch (error) {
+    // try {
+    //   wx.stopLocalServiceDiscovery({});
+    // } catch (error) {
       
-    }
+    // }
 
     this.disableSearchDevice = true;
     if (this.UDPSocketHandler) {
