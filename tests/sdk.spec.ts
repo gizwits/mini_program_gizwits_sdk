@@ -35,26 +35,24 @@ describe('SDK', function () {
     // 超时测试
     it('should config timeout', async function () {
       try {
-        const data = await sdk.setDeviceOnboardingDeploy({
+        await sdk.setDeviceOnboardingDeploy({
           ssid: 'SSID',
           password: 'password',
           timeout: 1,
           softAPSSIDPrefix: 'XPG-GAgent-',
         });
-        console.debug(data)
-        const isOk = (data as any).err.errorCode === errorCode.TIME_OUT;
-        assert.ok(isOk);
       } catch (error) {
-        console.error(error)
+        const isOk = (error as any).err.errorCode === errorCode.TIME_OUT;
+        assert.ok(isOk);
       }
     });
 
     it('udp error', async function () {
       try {
         setTimeout(() => {
-          global.wx.startLocalServiceDiscoverySuccessHandle(global.wx.baseMDNS);
-          global.wx.localServiceFoundHandle(global.wx.baseMDNS);
-          global.wx.createUDPSocketHandlerOnErrorHandle({errMsg: 'error'});
+          // global.wx.startLocalServiceDiscoverySuccessHandle(global.wx.baseMDNS);
+          // global.wx.localServiceFoundHandle(global.wx.baseMDNS);
+          global.wx.createUDPSocketHandlerOnErrorHandle({ errMsg: 'error' });
         }, 100);
         await sdk.setDeviceOnboardingDeploy({
           ssid: 'SSID',
@@ -67,22 +65,22 @@ describe('SDK', function () {
       }
     });
 
-    it('startLocalServiceDiscovery fail', async function () {
-      try {
-        setTimeout(() => {
-          // startLocalServiceDiscovery fail
-          global.wx.startLocalServiceDiscoveryFailHandle({errMsg: 'error'});
-        }, 100);
-        await sdk.setDeviceOnboardingDeploy({
-          ssid: 'SSID',
-          password: 'password',
-          timeout: 5,
-          softAPSSIDPrefix: 'XPG-GAgent-',
-        });
-      } catch (error) {
-        assert.ok((error as any).err.errorCode === errorCode.WECHAT_ERROR);
-      }
-    });
+    // it('startLocalServiceDiscovery fail', async function () {
+    //   try {
+    //     setTimeout(() => {
+    //       // startLocalServiceDiscovery fail
+    //       global.wx.startLocalServiceDiscoveryFailHandle({errMsg: 'error'});
+    //     }, 100);
+    //     await sdk.setDeviceOnboardingDeploy({
+    //       ssid: 'SSID',
+    //       password: 'password',
+    //       timeout: 5,
+    //       softAPSSIDPrefix: 'XPG-GAgent-',
+    //     });
+    //   } catch (error) {
+    //     assert.ok((error as any).err.errorCode === errorCode.WECHAT_ERROR);
+    //   }
+    // });
 
     // 两次查询大循环
     it('should config success. query twice api', async function () {
@@ -94,8 +92,8 @@ describe('SDK', function () {
       
 
       setTimeout(async () => {
-        global.wx.startLocalServiceDiscoverySuccessHandle(global.wx.baseMDNS);
-        global.wx.localServiceFoundHandle(global.wx.baseMDNS);
+        // global.wx.startLocalServiceDiscoverySuccessHandle(global.wx.baseMDNS);
+        // global.wx.localServiceFoundHandle(global.wx.baseMDNS);
         
         setTimeout(() => {
           global.wx.networkStatusChangeHandle();
@@ -158,8 +156,8 @@ describe('SDK', function () {
        */
 
       setTimeout(async () => {
-        global.wx.startLocalServiceDiscoverySuccessHandle(global.wx.baseMDNS);
-        global.wx.localServiceFoundHandle(global.wx.baseMDNS);
+        // global.wx.startLocalServiceDiscoverySuccessHandle(global.wx.baseMDNS);
+        // global.wx.localServiceFoundHandle(global.wx.baseMDNS);
 
         setTimeout(() => {
           global.wx.createUDPSocketHandlerOnMessageHandle('test');
@@ -184,8 +182,8 @@ describe('SDK', function () {
        * 二、执行 localServiceFoundHandle 传入MDNS 此时sdk会开始连接socket 发包
        */
       setTimeout(async () => {
-        global.wx.startLocalServiceDiscoverySuccessHandle(global.wx.baseMDNS);
-        global.wx.localServiceFoundHandle(global.wx.baseMDNS);
+        // global.wx.startLocalServiceDiscoverySuccessHandle(global.wx.baseMDNS);
+        // global.wx.localServiceFoundHandle(global.wx.baseMDNS);
 
         setTimeout(() => {
           global.wx.createUDPSocketHandlerOnMessageHandle('test');
@@ -202,25 +200,26 @@ describe('SDK', function () {
       assert.ok(data.success);
     });
 
-    it('should find device but config timeout', async function () {
-      // 发现设备，但是配置失败
-      setTimeout(async () => {
-        global.wx.startLocalServiceDiscoverySuccessHandle(global.wx.baseMDNS);
-        global.wx.localServiceFoundHandle(global.wx.baseMDNS);
-      }, 20);
 
-      try {
-        const data = await sdk.setDeviceOnboardingDeploy({
-          ssid: 'SSID',
-          password: 'password',
-          timeout: 5,
-          softAPSSIDPrefix: 'XPG-GAgent-',
-        });
-        assert.ok((data as any).err.errorCode === errorCode.TIME_OUT);
-      } catch (error) {
-        console.error(error)
-      }
-    });
+    // it('should find device but config timeout', async function () {
+    //   // 发现设备，但是配置失败
+    //   setTimeout(async () => {
+    //     global.wx.startLocalServiceDiscoverySuccessHandle(global.wx.baseMDNS);
+    //     global.wx.localServiceFoundHandle(global.wx.baseMDNS);
+    //   }, 20);
+
+    //   try {
+    //     const data = await sdk.setDeviceOnboardingDeploy({
+    //       ssid: 'SSID',
+    //       password: 'password',
+    //       timeout: 5,
+    //       softAPSSIDPrefix: 'XPG-GAgent-',
+    //     });
+    //     assert.ok((data as any).err.errorCode === errorCode.TIME_OUT);
+    //   } catch (error) {
+    //     console.error(error)
+    //   }
+    // });
 
     // 绑定接口报错
     it('should bindDevice error', async function () {
@@ -231,31 +230,32 @@ describe('SDK', function () {
         }
       };
       /**
-       * 模拟执行微信的动作
-       * 一、执行 startLocalServiceDiscoverySuccessHandle
-       * 二、执行 localServiceFoundHandle 传入MDNS 此时sdk会开始连接socket 发包
-       */
+   * 模拟执行微信的动作
+   * 一、执行 startLocalServiceDiscoverySuccessHandle
+   * 二、执行 localServiceFoundHandle 传入MDNS 此时sdk会开始连接socket 发包
+   */
 
       setTimeout(async () => {
-        global.wx.startLocalServiceDiscoverySuccessHandle(global.wx.baseMDNS);
-        global.wx.localServiceFoundHandle(global.wx.baseMDNS);
+        // global.wx.startLocalServiceDiscoverySuccessHandle(global.wx.baseMDNS);
+        // global.wx.localServiceFoundHandle(global.wx.baseMDNS);
 
         setTimeout(() => {
-          // global.wx.createUDPSocketHandlerOnMessageHandle('test');
+          global.wx.createUDPSocketHandlerOnMessageHandle('test');
           global.wx.networkStatusChangeHandle();
         }, 20);
       }, 20);
 
       try {
-        await sdk.setDeviceOnboardingDeploy({
+        const data = await sdk.setDeviceOnboardingDeploy({
           ssid: 'SSID',
           password: 'password',
           timeout: 5,
           softAPSSIDPrefix: 'XPG-GAgent-',
         });
+        console.log('=====', data)
       } catch (error) {
+        console.error('==BIND_FAIL==', error)
         assert.ok((error as any).err.errorCode === errorCode.BIND_FAIL);
-        console.error(error)
       }
     });
 
@@ -274,8 +274,8 @@ describe('SDK', function () {
        */
 
       setTimeout(async () => {
-        global.wx.startLocalServiceDiscoverySuccessHandle(global.wx.baseMDNS);
-        global.wx.localServiceFoundHandle(global.wx.baseMDNS);
+        // global.wx.startLocalServiceDiscoverySuccessHandle(global.wx.baseMDNS);
+        // global.wx.localServiceFoundHandle(global.wx.baseMDNS);
 
         setTimeout(() => {
           global.wx.createUDPSocketHandlerOnMessageHandle('test');
@@ -311,8 +311,8 @@ describe('SDK', function () {
        */
 
       setTimeout(async () => {
-        global.wx.startLocalServiceDiscoverySuccessHandle(global.wx.baseMDNS);
-        global.wx.localServiceFoundHandle(global.wx.baseMDNS);
+        // global.wx.startLocalServiceDiscoverySuccessHandle(global.wx.baseMDNS);
+        // global.wx.localServiceFoundHandle(global.wx.baseMDNS);
 
         setTimeout(() => {
           global.wx.createUDPSocketHandlerOnMessageHandle('test');
@@ -330,6 +330,34 @@ describe('SDK', function () {
         assert.ok(true);
       } catch (error) {
         assert.ok(true);
+      }
+    });
+
+    // 发现接口token 过期
+    it('should randomCode token error', async function () {
+      global.wx.randomCodeResult = {
+        data: {
+          error_code: '9004',
+        }
+      };
+
+      setTimeout(async () => {
+        // global.wx.startLocalServiceDiscoverySuccessHandle(global.wx.baseMDNS);
+        // global.wx.localServiceFoundHandle(global.wx.baseMDNS);
+        setTimeout(() => {
+          global.wx.createUDPSocketHandlerOnMessageHandle('test');
+        }, 20);
+      }, 20);
+
+      try {
+        await sdk.setDeviceOnboardingDeploy({
+          ssid: 'SSID',
+          password: 'password',
+          timeout: 20,
+          softAPSSIDPrefix: 'XPG-GAgent-',
+        });
+      } catch (error) {
+        assert.ok((error as any).err.errorCode === errorCode.API_ERROR);
       }
     });
 
