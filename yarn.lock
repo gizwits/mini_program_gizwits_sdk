@@ -2598,6 +2598,11 @@ minimist@~0.0.1:
   resolved "https://registry.yarnpkg.com/minimist/-/minimist-0.0.10.tgz#de3f98543dbf96082be48ad1a0c7cda836301dcf"
   integrity sha1-3j+YVD2/lggr5IrRoMfNqDYwHc8=
 
+miniprogram-api-typings@^3.3.0:
+  version "3.3.0"
+  resolved "https://registry.npm.taobao.org/miniprogram-api-typings/download/miniprogram-api-typings-3.3.0.tgz?cache=0&sync_timestamp=1614759852540&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Fminiprogram-api-typings%2Fdownload%2Fminiprogram-api-typings-3.3.0.tgz#3275d2ae66887481a410aedec54fd11eb8c7261f"
+  integrity sha1-MnXSrmaIdIGkEK7exU/RHrjHJh8=
+
 mississippi@^3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/mississippi/-/mississippi-3.0.0.tgz#ea0a3291f97e0b5e8776b363d5f0a12d94c67022"

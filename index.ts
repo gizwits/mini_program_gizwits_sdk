@@ -1,3 +1,4 @@
+import 'miniprogram-api-typings';
 import gizwitsSdk from './src/sdk';
 import errorCode from './src/errorCode';
 
