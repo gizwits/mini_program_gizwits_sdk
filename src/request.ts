@@ -6,21 +6,16 @@
  * @return {object}           An object containing either "data" or "err"
  */
 
-import { IResult } from "./sdk";
 
-export default function request(url: string, options: any): Promise<IResult> {
-  return new Promise((res, ret) => {
+export default function request<T>(url: string, options: any) {
+  return new Promise<T>((res, rej) => {
     wx.request({
       url, ...options,
-      success: (data: any) => {
-        if (data.data.error_code) {
-          ret({ err: data.data, success: false });
-        } else {
-          res({ data: data.data, success: true });
-        }
+      success: (data: T) => {
+        res(data)
       },
       fail: (err: any) => {
-        ret({ err, success: false });
+        rej(err);
       },
     });
   });

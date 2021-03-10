@@ -1,9 +1,13 @@
 import request from './request';
 import { getGlobalData } from "./global";
-import { IResult } from './sdk';
 
+interface IResult<T> {
+  data: T & {
+    error_code?: string;
+  }
+}
 
-const openApiRequest = (url: string, options: any): Promise<IResult> => {
+const openApiRequest = async <T>(url: string, options: any) => {
   const requestOptions = { ...options };
   const headers: any = {
     'Content-Type': 'application/json',
@@ -16,7 +20,8 @@ const openApiRequest = (url: string, options: any): Promise<IResult> => {
   delete requestOptions.headers;
   // console.log(`openApi request ${url}`, requestOptions);
   const openApiUrl = getGlobalData('cloudServiceInfo').openAPIInfo;
-  return request('https://' + openApiUrl + url, requestOptions);
+  const res = await request<IResult<T>>('https://' + openApiUrl + url, requestOptions);
+  return res.data;
 }
 
 export default openApiRequest;

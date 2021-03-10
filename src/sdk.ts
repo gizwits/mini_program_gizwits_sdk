@@ -39,9 +39,9 @@ interface IErr {
   errorMessage: string;
 }
 
-interface IResult {
+interface IResult<T> {
   success: boolean;
-  data?: IDevice | null;
+  data?: T;
   err?: IErr;
 }
 
@@ -106,9 +106,9 @@ class SDK implements ISDK {
     this.setDomain(cloudServiceInfo);
 
     // 监听服务发现
-    wx.onLocalServiceFound((data: any) => {
-      this.onFoundService && this.onFoundService(data);
-    });
+    // wx.onLocalServiceFound((data: any) => {
+    //   this.onFoundService && this.onFoundService(data);
+    // });
   }
 
   appID: string = '';
@@ -119,7 +119,7 @@ class SDK implements ISDK {
   UDPSocketHandler: any = null;
   disableSendUDP: boolean = false;
   // onLocalServiceFound 的callback
-  onFoundService: any;
+  // onFoundService: any;
 
   // 配网超时
   timeoutHandler: any = null;
@@ -164,8 +164,8 @@ class SDK implements ISDK {
    */
   configDevice = (
     { ssid, password, softAPSSIDPrefix }: configDeviceParamse,
-  ): Promise<IResult> => {
-    return new Promise((res, rej) => {
+  ) => {
+    return new Promise<IResult<IDevice[]>>((res, rej) => {
       console.debug('GIZ_SDK: start config device');
       let searchingDevice = false;
 
@@ -251,7 +251,7 @@ class SDK implements ISDK {
             errorCode: errorCode.WECHAT_ERROR,
             errorMessage: data.errMsg
           }
-        } as IResult);
+        });
       });
 
       // 清理一些监听，调用搜索设备
@@ -298,8 +298,8 @@ class SDK implements ISDK {
   /**
    * 大循环确认
    */
-  searchDevice = ({ ssid, password }: { ssid: string, password: string }): Promise<IResult> => {
-    return new Promise((res, rej) => {
+  searchDevice = ({ ssid, password }: { ssid: string, password: string }) => {
+    return new Promise<IResult<IDevice[]>>((res, rej) => {
       // 连续发起请求 确认大循环
       const codes = getRandomCodes({ SSID: ssid, password: password, pks: this.specialProductKeys });
       console.debug('params', ssid, password, this.specialProductKeys)
@@ -311,34 +311,36 @@ class SDK implements ISDK {
       codeStr = codeStr.substring(0, codeStr.length - 1);
       console.debug('codeStr', codeStr)
       const query = async () => {
-        let data: any = {};
         try {
-          data = await request(`/app/device_register?random_codes=${codeStr}`, { method: 'get' });
+          const data = await request<IDevice[]>(`/app/device_register?random_codes=${codeStr}`, { method: 'get' });
+
           console.log('GIZ_SDK: try get device random codes', data);
-          if (data.data.length === 0) {
-            // 重新请求
-            await sleep(3000);
-            !this.disableSearchDevice && query();
-          } else {
-            // 搜索到设备
-            console.log('GIZ_SDK: config device success', data.data)
-            res({
-              success: true,
-              data: data.data
-            } as IResult);
-          }
-        } catch (error) {
-          // 重新请求
-          if (error.err.error_code === '9004') {
+          if (data.error_code === '9004') {
             // token 失效
             rej({
               success: false,
               err: {
                 errorCode: errorCode.API_ERROR,
-                errorMessage: JSON.stringify(error.err),
+                errorMessage: JSON.stringify(data),
               }
-            } as IResult);
+            });
+            return;
           }
+
+          if (data.error_code || (data as IDevice[]).length === 0) {
+            // 重新请求
+            await sleep(3000);
+            !this.disableSearchDevice && query();
+          } else {
+            // 搜索到设备
+            console.log('GIZ_SDK: config device success', data)
+            res({
+              success: true,
+              data
+            });
+          }
+        } catch (error) {
+          // 重新请求
           await sleep(3000);
           !this.disableSearchDevice && query();
           console.debug('GIZ_SDK: random codes error', error);
@@ -353,8 +355,8 @@ class SDK implements ISDK {
    * setDeviceOnboardingDeploy方法不可重复调用
    */
   setDeviceOnboardingDeploy = ({
-    ssid, password, timeout, isBind = true, softAPSSIDPrefix }: ISetDeviceOnboardingDeployProps): Promise<IResult> => {
-    return new Promise(async (res, rej) => {
+    ssid, password, timeout, isBind = true, softAPSSIDPrefix }: ISetDeviceOnboardingDeployProps) => {
+    return new Promise<IResult<IDevice[]>>(async (res, rej) => {
       if (this.timeoutHandler) {
         // 方法还在执行中
         rej({
@@ -363,7 +365,7 @@ class SDK implements ISDK {
             errorCode: errorCode.EXECUTING,
             errorMessage: 'executing',
           }
-        } as IResult);
+        });
         return;
       }
       this.clean();
@@ -379,37 +381,30 @@ class SDK implements ISDK {
             errorCode: errorCode.TIME_OUT,
             errorMessage: 'time out',
           } as IErr
-        } as IResult);
+        });
         this.clean();
       }, timeout * 1000);
-      
+
       try {
         const result = await this.configDevice({ ssid, password, softAPSSIDPrefix });
         if (isBind) {
           try {
-            await this.bindDevices(result.data as unknown as IDevice[]);
+            const bindResult = await this.bindDevices(result.data as unknown as IDevice[]);
             console.log('GIZ_SDK: bind device success', result.data)
             res({
               success: true,
-              data: result.data,
-            } as IResult);
+              data: bindResult.data,
+            });
           } catch (error) {
-            console.log('GIZ_SDK: bind device error', error.err)
-            rej({
-              success: false,
-              err: {
-                errorCode: errorCode.BIND_FAIL,
-                errorMessage: JSON.stringify(error.err),
-                devices: result.data // 返回绑定失败的设备
-              }
-            } as IResult);
+            // console.log('GIZ_SDK: bind device error', error.err)
+            rej(error);
           }
         } else {
           // 不需要绑定 直接返回成功
           res({
             success: true,
             data: result.data,
-          } as IResult);
+          });
         }
       } catch (error) {
         // console.log('configDevice', error);
@@ -417,26 +412,25 @@ class SDK implements ISDK {
       } finally {
         this.clean();
       }
-      
+
     });
   }
 
   /**
    * 绑定多个设备
    */
-  bindDevices = (devices: IDevice[]): Promise<IResult> => {
+  bindDevices = (devices: IDevice[]) => {
     console.log('GIZ_SDK: start bind device')
-    return new Promise(async (res, rej) => {
-      const promises: Promise<IResult>[] = [];
+    return new Promise<IResult<IDevice[]>>(async (res, rej) => {
 
       let timestamp = Date.parse(`${new Date()}`);
       timestamp = timestamp / 1000;
 
-      devices.map(item => {
+      const promises = devices.map(item => {
         const index = this.specialProductKeys.findIndex(pk => item.product_key === pk);
         if (index === -1) return;
         const ps = this.specialProductKeySecrets[index];
-        const promise = request(
+        return request<IDevice>(
           '/app/bind_mac',
           {
             method: 'POST',
@@ -452,19 +446,30 @@ class SDK implements ISDK {
             }
           },
         );
-        promises.push(promise);
       });
 
       try {
         const data = await Promise.all(promises);
-        const returnData: any = [];
-        data.map((item: any) => {
-          item.success && returnData.push(item.data);
-        })
-        res({
-          success: true,
-          data: returnData,
+        const successDevices = devices.filter((_, index) => {
+          const item = data[index];
+          return item && !item.error_code;
         });
+        if (successDevices.length > 0) {
+          res({
+            success: true,
+            data: successDevices,
+          })
+        } else {
+          console.log('GIZ_SDK: bind device error', data)
+          rej({
+            success: false,
+            err: {
+              errorCode: errorCode.BIND_FAIL,
+              errorMessage: JSON.stringify(data),
+              devices // 返回绑定失败的设备
+            }
+          });
+        }
       } catch (error) {
         rej(error);
       }
@@ -480,12 +485,12 @@ class SDK implements ISDK {
     this.timeoutHandler = null;
     this.sendMessageInterval = null;
     this.setDeviceOnboardingDeployRej = null;
-    this.onFoundService = null;
+    // this.onFoundService = null;
 
     // try {
     //   wx.stopLocalServiceDiscovery({});
     // } catch (error) {
-      
+
     // }
 
     this.disableSearchDevice = true;
@@ -516,5 +521,3 @@ class SDK implements ISDK {
 // const sdk = new SDK({appID: '', appSecret: ''});
 // sdk.sendConfig({ssid: 'gizwits', password: 'giz$2025'}, {} as any);
 export default SDK;
-
-export { IResult };
