@@ -335,6 +335,7 @@ describe('SDK', function () {
 
     // 发现接口token 过期
     it('should randomCode token error', async function () {
+      global.wx.requestErr = null;
       global.wx.randomCodeResult = {
         data: {
           error_code: '9004',

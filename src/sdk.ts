@@ -81,6 +81,10 @@ interface IProps {
   uid: string;
 }
 
+interface IRejectCallback {
+  (result: IResult<unknown>): void
+}
+
 class SDK implements ISDK {
   constructor({ appID, appSecret, specialProductKeys, specialProductKeySecrets, cloudServiceInfo, token, uid }: IProps) {
 
@@ -146,17 +150,49 @@ class SDK implements ISDK {
   }
 
   formatCode = (str) => {
-    let code: any = encodeURI(str)
-    let codes: number[] = [];
+    const code = encodeURI(str);
     if (code.indexOf('%') !== -1 && str !== '%') {
       // utf8
-      code = code.split('%').filter((item: any) => item !== '').map((item: string) => parseInt(item, 16));
-      codes = code;
-    } else {
-      code = code.charCodeAt(0);
-      codes = [code];
+      return code.split('%').filter((item) => item !== '').map((item) => parseInt(item, 16));
     }
-    return codes;
+    return [code.charCodeAt(0)];
+  }
+
+  formatCodesFromStr = (str: string) => {
+    const len = [0, 0];
+    let codes: number[] = [];
+    for (let i = 0; i < str.length; i++) {
+      const code = this.formatCode(str[i])
+      len[1] += code.length;
+      codes = codes.concat(code);
+    }
+    return [codes, len];
+  }
+
+  formatPackages = (ssid: string, password: string) => {
+    const header = [0, 0, 0, 3];
+    const length: number[] = [];
+    const flag = [0];
+    const cmd = [0, 1];
+
+    const [ASSID, ssidLength] = this.formatCodesFromStr(ssid);
+    const [APassword, passwordLength] = this.formatCodesFromStr(password);
+
+    const content = flag.concat(cmd, ssidLength, ASSID, passwordLength, APassword);
+
+    let contentLength = content.length;
+    while (contentLength > 0) {
+      length.push(contentLength);
+      contentLength -= 255;
+    }
+
+    const config = header.concat(length).concat(content);
+    const buffer = new ArrayBuffer(config.length);
+    const uint8Array = new Uint8Array(buffer)
+    for (let i = 0; i < buffer.byteLength; i++) {
+      uint8Array[i] = config[i];
+    }
+    return uint8Array;
   }
 
   /**
@@ -168,43 +204,7 @@ class SDK implements ISDK {
     return new Promise<IResult<IDevice[]>>((res, rej) => {
       console.debug('GIZ_SDK: start config device');
       let searchingDevice = false;
-
-      const header = [0, 0, 0, 3];
-      let length: number[] = [];
-      const flag = [0];
-      const cmd = [0, 1];
-      const ssidLength = [0, 0];
-      const passwordLength = [0, 0];
-
-      let ASSID: number[] = [];
-      for (let i = 0; i < ssid.length; i++) {
-        const code = this.formatCode(ssid[i])
-        ssidLength[1] += code.length;
-        ASSID = ASSID.concat(code);
-      }
-
-      let APassword: number[] = [];
-      for (let i = 0; i < password.length; i++) {
-        const code = this.formatCode(password[i])
-        passwordLength[1] += code.length;
-        APassword = APassword.concat(code);
-      }
-
-      const content = flag.concat(cmd, ssidLength, ASSID, passwordLength, APassword);
-      // length = content.length.toString(16);
-
-      let contentLength = content.length;
-      while (contentLength > 0) {
-        length.push(contentLength);
-        contentLength -= 255;
-      }
-
-      const config = header.concat(length).concat(content);
-      const buffer = new ArrayBuffer(config.length);
-      const uint8Array = new Uint8Array(buffer)
-      for (let i = 0; i < buffer.byteLength; i++) {
-        uint8Array[i] = config[i];
-      }
+      const uint8Array = this.formatPackages(ssid, password);
       /**
        * 连接socket 发送
        */
@@ -350,6 +350,37 @@ class SDK implements ISDK {
     });
   }
 
+  hasTimeoutHandler = (cb?: IRejectCallback) => {
+    if (this.timeoutHandler) {
+      // 方法还在执行中
+      cb && cb({
+        success: false,
+        err: {
+          errorCode: errorCode.EXECUTING,
+          errorMessage: 'executing',
+        }
+      })
+      return true;
+    }
+    return false;
+  }
+
+  startTimeoutTimer = (timeout: number, cb?: IRejectCallback) => {
+    /**
+     * 设置超时时间
+     */
+    this.timeoutHandler = setTimeout(() => {
+      cb && cb({
+        success: false,
+        err: {
+          errorCode: errorCode.TIME_OUT,
+          errorMessage: 'time out',
+        } as IErr
+      });
+      this.clean();
+    }, timeout * 1000);
+  }
+
   /**
    * 配网接口
    * setDeviceOnboardingDeploy方法不可重复调用
@@ -357,62 +388,34 @@ class SDK implements ISDK {
   setDeviceOnboardingDeploy = ({
     ssid, password, timeout, isBind = true, softAPSSIDPrefix }: ISetDeviceOnboardingDeployProps) => {
     return new Promise<IResult<IDevice[]>>(async (res, rej) => {
-      if (this.timeoutHandler) {
-        // 方法还在执行中
-        rej({
-          success: false,
-          err: {
-            errorCode: errorCode.EXECUTING,
-            errorMessage: 'executing',
-          }
-        });
-        return;
-      }
-      this.clean();
-      this.setDeviceOnboardingDeployRej = rej;
-      this.disableSearchDevice = false;
-      /**
-       * 设置超时时间
-       */
-      this.timeoutHandler = setTimeout(() => {
-        rej({
-          success: false,
-          err: {
-            errorCode: errorCode.TIME_OUT,
-            errorMessage: 'time out',
-          } as IErr
-        });
+      if (!this.hasTimeoutHandler(rej)) {
         this.clean();
-      }, timeout * 1000);
+        this.setDeviceOnboardingDeployRej = rej;
+        this.disableSearchDevice = false;
 
-      try {
-        const result = await this.configDevice({ ssid, password, softAPSSIDPrefix });
-        if (isBind) {
-          try {
-            const bindResult = await this.bindDevices(result.data as unknown as IDevice[]);
-            console.log('GIZ_SDK: bind device success', result.data)
+        this.startTimeoutTimer(timeout, rej)
+
+        try {
+          const result = await this.configDevice({ ssid, password, softAPSSIDPrefix });
+          if (isBind) {
+            try {
+              res(await this.bindDevices(result.data as unknown as IDevice[]));
+            } catch (error) {
+              rej(error);
+            }
+          } else {
+            // 不需要绑定 直接返回成功
             res({
               success: true,
-              data: bindResult.data,
+              data: result.data,
             });
-          } catch (error) {
-            // console.log('GIZ_SDK: bind device error', error.err)
-            rej(error);
           }
-        } else {
-          // 不需要绑定 直接返回成功
-          res({
-            success: true,
-            data: result.data,
-          });
+        } catch (error) {
+          rej(error);
+        } finally {
+          this.clean();
         }
-      } catch (error) {
-        // console.log('configDevice', error);
-        rej(error);
-      } finally {
-        this.clean();
       }
-
     });
   }
 
@@ -455,6 +458,7 @@ class SDK implements ISDK {
           return item && !item.error_code;
         });
         if (successDevices.length > 0) {
+          console.log('GIZ_SDK: bind device success', successDevices)
           res({
             success: true,
             data: successDevices,
