@@ -82,5 +82,66 @@ global.wx = {
   networkStatusChangeHandle: null,
   onNetworkStatusChange: (func) => {
     global.wx.networkStatusChangeHandle = func;
-  }
+  },
 };
+
+[
+  'getBluetoothAdapterState',
+  'closeBLEConnection',
+  'getBluetoothDevices',
+  'getBLEDeviceServices',
+  'getBLEDeviceCharacteristics',
+  'notifyBLECharacteristicValueChange',
+  'writeBLECharacteristicValue',
+  'createBLEConnection',
+  'offBLECharacteristicValueChange'
+].forEach((key) => {
+  global.wx[key] = () => { };
+  global.wx[key].callCount = 0;
+  const handler = {
+    apply: function (target, obj, arguments) {
+      global.wx[key].callCount += 1;
+      const wxOption = arguments[0];
+      if (!wxOption) {
+        return target(...arguments);
+      }
+      if (target.success) {
+        if (wxOption.success) {
+          setTimeout(() => {
+            wxOption.success(target.success);
+          }, 50);
+        }
+      } else if (target.fail) {
+        if (wxOption.fail) {
+          setTimeout(() => {
+            wxOption.fail(target.fail);
+          }, 50);
+        }
+      } else if (target.complete) {
+        if (wxOption.complete) {
+          setTimeout(() => {
+            wxOption.complete(target.complete);
+          }, 50);
+        }
+      } else {
+        return target(...arguments);
+      }
+      return;
+    }
+  };
+  global.wx[key] = new Proxy(global.wx[key], handler)
+});
+
+['onBLECharacteristicValueChange'].forEach((key) => {
+  global.wx[key] = () => { };
+  const handler = {
+    apply: function (target, obj, arguments) {
+      const cb = arguments[0];
+      if (cb) {
+        target.callback = cb;
+      }
+      return;
+    }
+  };
+  global.wx[key] = new Proxy(global.wx[key], handler)
+});

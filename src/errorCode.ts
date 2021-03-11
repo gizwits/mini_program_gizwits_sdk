@@ -5,6 +5,7 @@ const errorCode = {
   EXECUTING: Symbol('EXECUTING'),
   API_ERROR: Symbol('API_ERROR'),
   BIND_FAIL: Symbol('BIND_FAIL'),
+  BLE_ERROR: Symbol('BLE_ERROR'),
 };
 
 export default errorCode;

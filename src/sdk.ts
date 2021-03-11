@@ -5,13 +5,18 @@ import { setGlobalData } from "./global";
 import request from "./openApiRequest";
 
 import sleep from './sleep';
+import { IBLEDevice, getBluetoothDevices, getBluetoothAdapterState } from "./wechatApi";
+import { sendBLEConfigCmd } from "./ble";
 
 
-interface ISetDeviceOnboardingDeployProps {
+interface ISetCommonDeviceOnboardingDeployProps {
   ssid: string;
   password: string;
   timeout: number;
   isBind?: boolean;
+}
+
+interface ISetDeviceOnboardingDeployProps extends ISetCommonDeviceOnboardingDeployProps {
   softAPSSIDPrefix: string;
 }
 
@@ -54,6 +59,10 @@ interface ITarget {
 
 interface configDeviceParamse {
   ssid: string; password: string; softAPSSIDPrefix: string;
+}
+
+interface configBLEDeviceParamse {
+  ssid: string; password: string; timeout: number;
 }
 
 interface ISDK {
@@ -519,6 +528,151 @@ class SDK implements ISDK {
       });
     }
     this.clean();
+  }
+
+  /**
+   * 蓝牙配网
+   */
+  setBLEDeviceOnboardingDeploy = ({
+    ssid,
+    password,
+    timeout,
+    isBind = true,
+  }: ISetCommonDeviceOnboardingDeployProps) => {
+    return new Promise<IResult<IDevice[]>>(async (res, rej) => {
+      if (!this.hasTimeoutHandler(rej)) {
+        this.clean();
+        this.setDeviceOnboardingDeployRej = rej;
+        this.disableSearchDevice = false;
+
+        this.startTimeoutTimer(timeout, rej);
+
+        try {
+          const result = await this.configBLEDevice({ ssid, password, timeout: timeout * 1000 });
+          if (!this.hasTimeoutHandler()) {
+            // 如果已超时，结束执行接下来的流程
+            return;
+          }
+          if (isBind) {
+            try {
+              res(await this.bindDevices(result.data as unknown as IDevice[]));
+            } catch (error) {
+              rej(error);
+            }
+          } else {
+            // 不需要绑定 直接返回成功
+            res({
+              success: true,
+              data: result.data,
+            });
+          }
+        } catch (error) {
+          rej(error);
+        } finally {
+          this.clean();
+        }
+      }
+    })
+  }
+
+  handleWechatError = (error, cb: IRejectCallback) => {
+    cb({
+      success: false,
+      err: {
+        errorCode: errorCode.WECHAT_ERROR,
+        errorMessage: JSON.stringify(error),
+      }
+    })
+  }
+
+  /**
+   * 负责发蓝牙设备指令
+   */
+  configBLEDevice = (
+    { ssid, password, timeout }: configBLEDeviceParamse,
+  ) => {
+    return new Promise<IResult<IDevice[]>>(async (res, rej) => {
+      console.debug('GIZ_SDK: start config ble device');
+
+      const stateRes = await getBluetoothAdapterState().catch((error) => {
+        this.handleWechatError(error, rej);
+        return null;
+      });
+
+      if (!stateRes) {
+        // 获取蓝牙状态异常
+        return;
+      }
+
+      if (!stateRes.available) {
+        rej({
+          success: false,
+          err: {
+            errorCode: errorCode.BLE_ERROR,
+            errorMsg: '蓝牙状态不可用'
+          }
+        });
+        return;
+      }
+
+      let devices: IBLEDevice[] | null = [];
+
+      while (devices && devices.length === 0) {
+        if (!this.hasTimeoutHandler()) {
+          return;
+        }
+        devices = await getBluetoothDevices().catch((error) => {
+          this.handleWechatError(error, rej);
+          return null;
+        });
+        if (devices && devices.length === 0) {
+          // 一秒钟后再重新查询
+          await sleep(1000);
+        }
+      }
+
+      if (!devices) {
+        // 获取蓝牙设备异常
+        return;
+      }
+
+      const resultList: boolean[] = [];
+
+      const uint8Array = this.formatPackages(ssid, password);
+      for (let i = 0; i < devices.length; i++) {
+        if (!this.hasTimeoutHandler()) {
+          return;
+        }
+        const device = devices[i];
+        // 延迟100ms发送一次
+        await sleep(100);
+        // 发送错误不处理，接着处理下个设备
+        const success = await sendBLEConfigCmd({
+          bleDeviceId: device.deviceId,
+          arryBuffer: uint8Array,
+          timeout,
+        });
+        resultList.push(success);
+      }
+
+      // 有一个发送蓝牙指令成功，则进入大循环确认阶段
+      if (resultList.some(success => success)) {
+        try {
+          const devicesReturn = await this.searchDevice({ ssid, password });
+          res(devicesReturn);
+        } catch (error) {
+          rej(error)
+        }
+      } else {
+        rej({
+          success: false,
+          err: {
+            errorCode: errorCode.BLE_ERROR,
+            errorMsg: '发送蓝牙指令失败'
+          }
+        })
+      }
+    })
   }
 }
 
