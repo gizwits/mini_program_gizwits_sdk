@@ -1,13 +1,15 @@
 import errorCode from "./errorCode";
 import * as MD5 from 'js-md5';
 import getRandomCodes from "./randomCode";
-import { setGlobalData } from "./global";
+import { setGlobalData } from "./globalData";
 import request from "./openApiRequest";
 
 import sleep from './sleep';
 import { IBLEDevice, getBluetoothDevices, getBluetoothAdapterState } from "./wechatApi";
 import { sendBLEConfigCmd } from "./ble";
 
+import GizwitsWS from "./socket";
+import { isError } from "./utils";
 
 interface ISetCommonDeviceOnboardingDeployProps {
   ssid: string;
@@ -39,15 +41,10 @@ interface IDevice {
   id?: string;
 }
 
-interface IErr {
-  errorCode: Symbol;
-  errorMessage: string;
-}
-
 interface IResult<T> {
   success: boolean;
   data?: T;
-  err?: IErr;
+  err?: IError;
 }
 
 interface ITarget {
@@ -88,6 +85,7 @@ interface IProps {
   cloudServiceInfo: ICloudServiceInfo | null;
   token: string;
   uid: string;
+  onDeviceStatusChanged?: IOnDeviceStatusChanged
 }
 
 interface IRejectCallback {
@@ -95,7 +93,7 @@ interface IRejectCallback {
 }
 
 class SDK implements ISDK {
-  constructor({ appID, appSecret, specialProductKeys, specialProductKeySecrets, cloudServiceInfo, token, uid }: IProps) {
+  constructor({ appID, appSecret, specialProductKeys, specialProductKeySecrets, cloudServiceInfo, token, uid, onDeviceStatusChanged }: IProps) {
 
     this.appID = appID;
     this.appSecret = appSecret;
@@ -103,6 +101,7 @@ class SDK implements ISDK {
     this.specialProductKeySecrets = specialProductKeySecrets;
     this.token = token;
     this.uid = uid;
+    this.onDeviceStatusChanged = onDeviceStatusChanged;
 
     // 保存相关信息
     setGlobalData('appID', appID);
@@ -116,13 +115,21 @@ class SDK implements ISDK {
     /**
      * 同时也设置域名信息
      */
-    this.setDomain(cloudServiceInfo);
+    const openAPIInfo = cloudServiceInfo && cloudServiceInfo.openAPIInfo || 'api.gizwits.com';
+    this.setDomain({ ...(cloudServiceInfo || {}), openAPIInfo });
 
     // 监听服务发现
     // wx.onLocalServiceFound((data: any) => {
     //   this.onFoundService && this.onFoundService(data);
     // });
+    this.socket = new GizwitsWS({
+      appID: this.appID, token: this.token, uid: this.uid, openAPIInfo,
+    })
   }
+
+  socket: GizwitsWS;
+  hasInitSocket: boolean = false;
+  onDeviceStatusChanged?: IOnDeviceStatusChanged
 
   appID: string = '';
   appSecret: string = '';
@@ -147,14 +154,7 @@ class SDK implements ISDK {
   /**
    * 设置域名
    */
-  setDomain = (cloudServiceInfo: ICloudServiceInfo | null) => {
-    if (cloudServiceInfo && cloudServiceInfo.openAPIInfo) {
-
-    } else {
-      cloudServiceInfo = {
-        openAPIInfo: 'api.gizwits.com',
-      };
-    }
+  setDomain = (cloudServiceInfo: ICloudServiceInfo) => {
     setGlobalData('cloudServiceInfo', cloudServiceInfo);
   }
 
@@ -384,7 +384,7 @@ class SDK implements ISDK {
         err: {
           errorCode: errorCode.TIME_OUT,
           errorMessage: 'time out',
-        } as IErr
+        }
       });
       this.clean();
     }, timeout * 1000);
@@ -467,7 +467,9 @@ class SDK implements ISDK {
           return item && !item.error_code;
         });
         if (successDevices.length > 0) {
-          console.log('GIZ_SDK: bind device success', successDevices)
+          console.log('GIZ_SDK: bind device success', successDevices);
+          // 绑定成功，重新初始化socket
+          this.initSocket();
           res({
             success: true,
             data: successDevices,
@@ -673,6 +675,46 @@ class SDK implements ISDK {
         })
       }
     })
+  }
+
+  /**
+   * 初始化socket
+   * @returns 
+   */
+  initSocket = async (onDeviceStatusChanged?: IOnDeviceStatusChanged) => {
+    this.hasInitSocket = false;
+    const initErr = await this.socket.init();
+    if (initErr) {
+      return initErr;
+    }
+    this.hasInitSocket = true;
+    if (onDeviceStatusChanged) {
+      this.socket.subscribeDeviceStatus(onDeviceStatusChanged)
+    }
+    return null;
+  }
+
+  // 订阅设备
+  setSubscribes = async (dids: string[]) => {
+    if (!this.hasInitSocket) {
+      const initErr = await this.initSocket(this.onDeviceStatusChanged);
+      if (initErr) {
+        return initErr;
+      }
+    }
+    const result = await dids.map(did => this.socket.connect(did));
+    const error = result.find(e => isError(e))
+    return error;
+  }
+
+  // 控制设备
+  write = (did: string, attrs: ICommonObj) => {
+    return this.socket.write(did, attrs);
+  }
+
+  // 请求上报数据
+  read = (did: string, names?: string[]) => {
+    return this.socket.read(did, names);
   }
 }
 

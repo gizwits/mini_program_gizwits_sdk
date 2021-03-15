@@ -1,5 +1,5 @@
 import request from './request';
-import { getGlobalData } from "./global";
+import { getGlobalData } from "./globalData";
 
 interface IResult<T> {
   data: T & {

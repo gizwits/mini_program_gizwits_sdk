@@ -445,7 +445,6 @@ describe('SDK ble', function () {
         timeout: 5,
         isBind: false,
       });
-      console.log('====', res);
     });
 
     it('should randomCode token error', async function () {

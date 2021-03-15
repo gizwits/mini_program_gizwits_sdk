@@ -57,6 +57,16 @@ global.wx = {
     data: {},
     code: 200
   },
+  bindingsResult: {
+    data: {
+      devices: [
+        { mac: '123', did: '123', host: 'm2m.gizwits.com', wss_port: 2000 },
+        { mac: '1231', did: '1231', host: 'm2m.gizwits.com', wss_port: 2000 },
+        { mac: '1234', did: '1234', host: 'm2m2.gizwits.com', wss_port: 2000 }
+      ]
+    },
+    code: 200
+  },
   requestErr: null,
   request: ({url, header, fail, success}) => {
     if (url.indexOf('device_register?random_code') !== -1) {
@@ -78,11 +88,25 @@ global.wx = {
         }
       }, 100);
     }
+    if (url.indexOf('app/bindings') !== -1) {
+      setTimeout(() => {
+        if (global.wx.requestErr) {
+          fail && fail(global.wx.requestErr);
+        } else {
+          success && success(global.wx.bindingsResult);
+        }
+      }, 100);
+    }
   },
   networkStatusChangeHandle: null,
   onNetworkStatusChange: (func) => {
     global.wx.networkStatusChangeHandle = func;
   },
+  connectSocket: () => new MockSocket(),
+
+  getSystemInfoSync: () => ({
+    SDKVersion: '1.6.9'
+  })
 };
 
 [
@@ -145,3 +169,31 @@ global.wx = {
   };
   global.wx[key] = new Proxy(global.wx[key], handler)
 });
+
+class MockSocket {
+  open = false;
+  receiveCmds = [];
+  onOpen = (cb) => {
+    this._handleOpen = cb;
+  }
+  onClose = (cb) => {
+    this._handleClose = cb;
+  }
+  onMessage = (cb) => {
+    this._handleMessage = cb && (data => cb({ data: JSON.stringify(data) }));
+  }
+  onError = (cb) => {
+    this._handleError = cb;
+  }
+  close = () => {
+    this.open = false;
+    setTimeout(() => {
+      this._handleClose && this._handleClose();
+    }, 0);
+  }
+  send = ({ data, complete }) => {
+    const obj = JSON.parse(data);
+    this.receiveCmds.push(obj.cmd);
+    complete && complete();
+  }
+}

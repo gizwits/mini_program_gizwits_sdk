@@ -1,4 +1,4 @@
-import { assert } from 'chai';
+import { assert, expect } from 'chai';
 import GizwitsSdk, { errorCode } from '../index';
 
 import 'mocha';
@@ -252,7 +252,6 @@ describe('SDK', function () {
           timeout: 5,
           softAPSSIDPrefix: 'XPG-GAgent-',
         });
-        console.log('=====', data)
       } catch (error) {
         console.error('==BIND_FAIL==', error)
         assert.ok((error as any).err.errorCode === errorCode.BIND_FAIL);
@@ -378,6 +377,42 @@ describe('SDK', function () {
         assert.ok((error as any).err.errorCode === errorCode.STOP);
       }
     });
+
+    describe('socket', function () {
+
+      it('setSubscribes but initSocket error', (done) => {
+        global.wx.requestErr = {
+          err: '',
+          code: 500,
+        };
+        sdk.hasInitSocket = false;
+        sdk.setSubscribes(['123']).then((error) => {
+          expect(error.errorCode).to.not.null;
+          global.wx.requestErr = null;
+          done()
+        });
+      })
+
+      it('setSubscribes not exist did', (done) => {
+        sdk.setSubscribes(['1232']).then((error) => {
+          expect(error.errorCode).to.not.null;
+          done()
+        })
+      })
+
+      it('setSubscribes', (done) => {
+        sdk.setSubscribes(['123']).then((error) => {
+          expect(error).to.undefined;
+          done()
+        })
+      })
+
+      it('smoke testing', () => {
+        sdk.initSocket(() => { });
+        sdk.write('123', {});
+        sdk.read('123', ['on']);
+      })
+    })
 
   });
 });
