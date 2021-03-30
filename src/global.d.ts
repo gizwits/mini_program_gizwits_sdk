@@ -1,4 +1,3 @@
-
 interface IError {
   errorCode: Symbol;
   errorMessage?: string;
@@ -19,5 +18,5 @@ interface IDeviceRawStatusChangedProps {
 }
 
 interface IOnDeviceStatusChanged {
-  (data: IDeviceStatusChangedProps | IDeviceRawStatusChangedProps) => void;
+  (data: IDeviceStatusChangedProps | IDeviceRawStatusChangedProps): void;
 }

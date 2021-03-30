@@ -1,27 +1,23 @@
-import { ab2hex } from "./utils";
 import { createBLEConnection, getBLEDeviceCharacteristics, getBLEDeviceServices, notifyBLECharacteristicValueChange, unpackWriteBLECharacteristicValue } from "./wechatApi";
 
 interface IArgs {
   bleDeviceId: string,
-  arryBuffer: ArrayBuffer,
-  timeout: number;
+  arrayBuffer: ArrayBuffer,
   serviceUUIDSuffix?: string;
   characteristicUUIDSuffix?: string;
 }
 
 export function sendBLEConfigCmd({
   bleDeviceId,
-  arryBuffer,
-  timeout,
+  arrayBuffer,
   serviceUUIDSuffix = 'abf0',
   characteristicUUIDSuffix = 'abf7',
 }: IArgs) {
   return new Promise<boolean>(async (resolve, reject) => {
     try {
-      const startTime = Date.now();
-      await createBLEConnection(bleDeviceId, timeout);
+      await createBLEConnection(bleDeviceId, 10 * 1000);
       const services = await getBLEDeviceServices(bleDeviceId);
-      const service = services.find(s => s.uuid.endsWith(serviceUUIDSuffix))
+      const service = services.find(s => (s.uuid.split('-')[0]).toLowerCase().endsWith(serviceUUIDSuffix))
       if (!service) {
         // 获取蓝牙设备服务异常
         console.debug('GIZ_SDK: get ble device services fail', bleDeviceId, services);
@@ -30,7 +26,7 @@ export function sendBLEConfigCmd({
       }
 
       const characteristics = await getBLEDeviceCharacteristics(bleDeviceId, service.uuid);
-      const characteristic = characteristics.find(c => c.uuid.endsWith(characteristicUUIDSuffix))
+      const characteristic = characteristics.find(c => (c.uuid.split('-')[0]).toLowerCase().endsWith(characteristicUUIDSuffix))
       if (!characteristic) {
         // 获取蓝牙设备特征值异常
         console.debug('GIZ_SDK: get ble device characteristics fail', bleDeviceId, characteristics);
@@ -51,18 +47,10 @@ export function sendBLEConfigCmd({
         characteristic.uuid
       );
 
-      const handleBLECharacteristicValueChange = ({ value }: { value: ArrayBuffer }) => {
-        const currentCharacteristic = ab2hex(value);
-
-        if (Date.now() - startTime > timeout) {
-          // 超时
-          wx.offBLECharacteristicValueChange(handleBLECharacteristicValueChange);
-          resolve(false);
-        } else if (currentCharacteristic.endsWith(characteristicUUIDSuffix)) {
-          // 发送成功
-          wx.offBLECharacteristicValueChange(handleBLECharacteristicValueChange);
-          resolve(true);
-        }
+      const handleBLECharacteristicValueChange = () => {
+        // 发送成功
+        wx.offBLECharacteristicValueChange(handleBLECharacteristicValueChange);
+        resolve(true);
       }
 
       // 订阅特征值变化
@@ -72,7 +60,7 @@ export function sendBLEConfigCmd({
         bleDeviceId,
         service.uuid,
         characteristic.uuid,
-        arryBuffer,
+        arrayBuffer,
       );
     } catch (error) {
       reject(error);

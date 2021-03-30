@@ -10,6 +10,14 @@ interface IWechatResult {
   errCode: number;
 }
 
+export function openBluetoothAdapter() {
+  return new Promise<IWechatResult>((res, rej) => {
+    wx.openBluetoothAdapter({
+      success: res,
+      fail: rej,
+    })
+  })
+}
 
 export function getBluetoothAdapterState() {
   return new Promise<IBluetoothAdapterStateResult>((res, rej) => {
@@ -20,12 +28,18 @@ export function getBluetoothAdapterState() {
   })
 }
 
-export interface IBLEDevice {
-  deviceId: string;
+export function startBluetoothDevicesDiscovery() {
+  return new Promise<IWechatResult>((res, rej) => {
+    wx.startBluetoothDevicesDiscovery({
+      success: res,
+      fail: rej,
+      interval: 100
+    })
+  })
 }
 
 export function getBluetoothDevices() {
-  return new Promise<IBLEDevice[]>((res, rej) => {
+  return new Promise<WechatMiniprogram.BlueToothDevice[]>((res, rej) => {
     wx.getBluetoothDevices({
       success: (({ devices }) => res(devices)),
       fail: rej,

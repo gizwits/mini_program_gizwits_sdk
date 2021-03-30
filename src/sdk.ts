@@ -5,17 +5,18 @@ import { setGlobalData } from "./globalData";
 import request from "./openApiRequest";
 
 import sleep from './sleep';
-import { IBLEDevice, getBluetoothDevices, getBluetoothAdapterState } from "./wechatApi";
+import { getBluetoothAdapterState, openBluetoothAdapter, startBluetoothDevicesDiscovery, getBluetoothDevices } from "./wechatApi";
 import { sendBLEConfigCmd } from "./ble";
 
 import GizwitsWS from "./socket";
-import { isError } from "./utils";
+import { isError, ab2hex } from "./utils";
 
 interface ISetCommonDeviceOnboardingDeployProps {
   ssid: string;
   password: string;
   timeout: number;
   isBind?: boolean;
+  softAPSSIDPrefix?: string;
 }
 
 interface ISetDeviceOnboardingDeployProps extends ISetCommonDeviceOnboardingDeployProps {
@@ -23,22 +24,15 @@ interface ISetDeviceOnboardingDeployProps extends ISetCommonDeviceOnboardingDepl
 }
 
 interface IDevice {
-  mac: string;
+  random_code: string;
   product_key: string;
+  mac: string;
   did: string;
-  name: string;
-  sno?: string;
-  manufacturer?: any;
-  alias?: string;
-  onlineStatus: boolean;
-  netStatus: number;
-  isSubscribed?: boolean;
-  meshID?: string;
-  isBind?: boolean;
-  isOnline?: boolean;
-  remark?: string;
-  siteGid: string;
-  id?: string;
+  user_id: string;
+  timestamp: number;
+  type: string;
+  wifi_soft_ver: string;
+  lan_proto_ver: string;
 }
 
 interface IResult<T> {
@@ -54,12 +48,15 @@ interface ITarget {
   port: number;
 }
 
-interface configDeviceParamse {
+interface configDeviceParams {
   ssid: string; password: string; softAPSSIDPrefix: string;
 }
 
-interface configBLEDeviceParamse {
-  ssid: string; password: string; timeout: number;
+interface configBLEDeviceParams {
+  ssid: string;
+  password: string
+  softAPSSIDPrefix?: string;
+  timeout: number;
 }
 
 interface ISDK {
@@ -67,7 +64,7 @@ interface ISDK {
   appSecret: string;
   timeoutHandler: any;
   disableSendUDP: any;
-  configDevice({ ssid, password, softAPSSIDPrefix }: configDeviceParamse, target: ITarget): any;
+  configDevice({ ssid, password, softAPSSIDPrefix }: configDeviceParams, target: ITarget): any;
   setDeviceOnboardingDeploy({
     ssid, password, timeout, isBind }: ISetDeviceOnboardingDeployProps): any;
   stopDeviceOnboardingDeploy(): void;
@@ -90,6 +87,16 @@ interface IProps {
 
 interface IRejectCallback {
   (result: IResult<unknown>): void
+}
+
+interface IWXDevicesResult {
+  success: true;
+  bleDevices: WechatMiniprogram.BlueToothDevice[];
+}
+
+function isWXDevicesResult(res: unknown): res is IWXDevicesResult {
+  return (res as IWXDevicesResult).success
+    && Object.prototype.toString.call((res as IWXDevicesResult).bleDevices) === '[object Array]';
 }
 
 class SDK implements ISDK {
@@ -123,7 +130,7 @@ class SDK implements ISDK {
     //   this.onFoundService && this.onFoundService(data);
     // });
     this.socket = new GizwitsWS({
-      appID: this.appID, token: this.token, uid: this.uid, openAPIInfo,
+      appID: this.appID, token: this.token, uid: this.uid,
     })
   }
 
@@ -147,9 +154,12 @@ class SDK implements ISDK {
   specialProductKeys: string[] = [];
   specialProductKeySecrets: string[] = [];
 
+  // 成功配网设备
+  successDevices: IDevice[] = [];
 
   disableSearchDevice: boolean = false;
-  setDeviceOnboardingDeployRej: any; // 保存promise的res，用于临时中断
+  setDeviceOnboardingDeployRej: any; // 保存promise的rej，用于临时中断
+  setDeviceOnboardingDeployRes: any; // 保存promise的res，用于临时中断
 
   /**
    * 设置域名
@@ -208,7 +218,7 @@ class SDK implements ISDK {
    * 负责发指令
    */
   configDevice = (
-    { ssid, password, softAPSSIDPrefix }: configDeviceParamse,
+    { ssid, password, softAPSSIDPrefix }: configDeviceParams,
   ) => {
     return new Promise<IResult<IDevice[]>>((res, rej) => {
       console.debug('GIZ_SDK: start config device');
@@ -310,7 +320,7 @@ class SDK implements ISDK {
   searchDevice = ({ ssid, password }: { ssid: string, password: string }) => {
     return new Promise<IResult<IDevice[]>>((res, rej) => {
       // 连续发起请求 确认大循环
-      const codes = getRandomCodes({ SSID: ssid, password: password, pks: this.specialProductKeys });
+      const codes = getRandomCodes({ SSID: ssid, password, pks: this.specialProductKeys });
       console.debug('params', ssid, password, this.specialProductKeys)
       console.debug('codes', codes)
       let codeStr = '';
@@ -374,20 +384,30 @@ class SDK implements ISDK {
     return false;
   }
 
-  startTimeoutTimer = (timeout: number, cb?: IRejectCallback) => {
-    /**
-     * 设置超时时间
-     */
-    this.timeoutHandler = setTimeout(() => {
-      cb && cb({
+  handleTimeout = () => {
+    // if (this.successDevices.length > 0 && this.setDeviceOnboardingDeployRes) {
+    //   this.setDeviceOnboardingDeployRes({
+    //     success: true,
+    //     data: this.successDevices,
+    //   });
+    // } else 
+    if (this.setDeviceOnboardingDeployRej) {
+      this.setDeviceOnboardingDeployRej({
         success: false,
         err: {
           errorCode: errorCode.TIME_OUT,
           errorMessage: 'time out',
         }
       });
-      this.clean();
-    }, timeout * 1000);
+    }
+    this.clean();
+  }
+
+  startTimeoutTimer = (timeout: number) => {
+    /**
+     * 设置超时时间
+     */
+    this.timeoutHandler = setTimeout(this.handleTimeout, timeout * 1000);
   }
 
   /**
@@ -399,10 +419,8 @@ class SDK implements ISDK {
     return new Promise<IResult<IDevice[]>>(async (res, rej) => {
       if (!this.hasTimeoutHandler(rej)) {
         this.clean();
-        this.setDeviceOnboardingDeployRej = rej;
-        this.disableSearchDevice = false;
-
-        this.startTimeoutTimer(timeout, rej)
+        this.initDeviceOnboardingDeploy(res, rej);
+        this.startTimeoutTimer(timeout)
 
         try {
           const result = await this.configDevice({ ssid, password, softAPSSIDPrefix });
@@ -500,6 +518,7 @@ class SDK implements ISDK {
     this.timeoutHandler = null;
     this.sendMessageInterval = null;
     this.setDeviceOnboardingDeployRej = null;
+    this.setDeviceOnboardingDeployRes = null;
     // this.onFoundService = null;
 
     // try {
@@ -514,6 +533,11 @@ class SDK implements ISDK {
       this.UDPSocketHandler.offMessage();
       this.UDPSocketHandler.close();
     }
+  }
+
+  cleanBle = () => {
+    wx.stopBluetoothDevicesDiscovery();
+    wx.closeBluetoothAdapter();
   }
 
   /**
@@ -532,6 +556,13 @@ class SDK implements ISDK {
     this.clean();
   }
 
+  initDeviceOnboardingDeploy = (res, rej) => {
+    this.setDeviceOnboardingDeployRes = res;
+    this.setDeviceOnboardingDeployRej = rej;
+    this.disableSearchDevice = false;
+    this.successDevices = [];
+  }
+
   /**
    * 蓝牙配网
    */
@@ -540,27 +571,23 @@ class SDK implements ISDK {
     password,
     timeout,
     isBind = true,
+    softAPSSIDPrefix,
   }: ISetCommonDeviceOnboardingDeployProps) => {
     return new Promise<IResult<IDevice[]>>(async (res, rej) => {
       if (!this.hasTimeoutHandler(rej)) {
         this.clean();
-        this.setDeviceOnboardingDeployRej = rej;
-        this.disableSearchDevice = false;
+        this.initDeviceOnboardingDeploy(res, rej);
 
-        this.startTimeoutTimer(timeout, rej);
-
+        this.startTimeoutTimer(timeout);
         try {
-          const result = await this.configBLEDevice({ ssid, password, timeout: timeout * 1000 });
+          const result = await this.configBLEDevice({ ssid, password, timeout: timeout * 1000, softAPSSIDPrefix });
           if (!this.hasTimeoutHandler()) {
             // 如果已超时，结束执行接下来的流程
             return;
           }
+
           if (isBind) {
-            try {
-              res(await this.bindDevices(result.data as unknown as IDevice[]));
-            } catch (error) {
-              rej(error);
-            }
+            res(await this.bindDevices(result.data as unknown as IDevice[]));
           } else {
             // 不需要绑定 直接返回成功
             res({
@@ -572,108 +599,128 @@ class SDK implements ISDK {
           rej(error);
         } finally {
           this.clean();
+          this.cleanBle();
         }
       }
     })
   }
 
-  handleWechatError = (error, cb: IRejectCallback) => {
-    cb({
-      success: false,
-      err: {
-        errorCode: errorCode.WECHAT_ERROR,
-        errorMessage: JSON.stringify(error),
-      }
-    })
+  stopBLEDeviceOnboardingDeploy = () => {
+    this.stopDeviceOnboardingDeploy();
+    this.cleanBle();
+  }
+
+  enableBluetoothDevicesDescovery = async (): Promise<{ success: false, err: IError } | { success: true }> => {
+    await openBluetoothAdapter()
+    const stateRes = await getBluetoothAdapterState();
+    if (!stateRes.available) {
+      return {
+        success: false,
+        err: {
+          errorCode: errorCode.BLE_ERROR,
+          errorMessage: '蓝牙状态不可用'
+        }
+      };
+    }
+
+    await startBluetoothDevicesDiscovery();
+    return { success: true }
+  }
+
+  isValidBleDevice = (bleDevice: WechatMiniprogram.BlueToothDevice, softAPSSIDPrefix?: string) => {
+    if (!bleDevice || !bleDevice.advertisData) {
+      // 无效蓝牙设备或者蓝牙设备广播数据为空，返回失败
+      return false;
+    }
+
+    const pkUintArray = bleDevice.advertisData.slice(bleDevice.advertisData.byteLength - 16);
+    const pk = ab2hex(pkUintArray);
+
+    if (!this.specialProductKeys.includes(pk)) {
+      // 不在PK列表
+      return false;
+    }
+    return !softAPSSIDPrefix || bleDevice.name && bleDevice.name.startsWith(softAPSSIDPrefix);
+  }
+
+  enableAndGetBluetoothDevices = async (softAPSSIDPrefix?: string): Promise<{ success: false, err: IError } | { success: true, bleDevices: WechatMiniprogram.BlueToothDevice[] }> => {
+    const discoveryRes = await this.enableBluetoothDevicesDescovery();
+    if (!discoveryRes.success) {
+      return discoveryRes;
+    }
+
+    const bleDevices: WechatMiniprogram.BlueToothDevice[] = (await getBluetoothDevices())
+      .filter((d) => this.isValidBleDevice(d, softAPSSIDPrefix));
+    return {
+      success: true,
+      bleDevices,
+    }
   }
 
   /**
    * 负责发蓝牙设备指令
    */
   configBLEDevice = (
-    { ssid, password, timeout }: configBLEDeviceParamse,
+    { ssid, password, softAPSSIDPrefix }: configBLEDeviceParams,
   ) => {
     return new Promise<IResult<IDevice[]>>(async (res, rej) => {
       console.debug('GIZ_SDK: start config ble device');
-
-      const stateRes = await getBluetoothAdapterState().catch((error) => {
-        this.handleWechatError(error, rej);
-        return null;
-      });
-
-      if (!stateRes) {
-        // 获取蓝牙状态异常
-        return;
-      }
-
-      if (!stateRes.available) {
-        rej({
+      const enableAndGetRes = await this.enableAndGetBluetoothDevices(softAPSSIDPrefix).catch((error) => {
+        return {
           success: false,
           err: {
-            errorCode: errorCode.BLE_ERROR,
-            errorMsg: '蓝牙状态不可用'
+            errorCode: errorCode.WECHAT_ERROR,
+            errorMessage: JSON.stringify(error),
           }
-        });
-        return;
-      }
-
-      let devices: IBLEDevice[] | null = [];
-
-      while (devices && devices.length === 0) {
-        if (!this.hasTimeoutHandler()) {
-          return;
         }
-        devices = await getBluetoothDevices().catch((error) => {
-          this.handleWechatError(error, rej);
-          return null;
-        });
-        if (devices && devices.length === 0) {
-          // 一秒钟后再重新查询
-          await sleep(1000);
-        }
+      });
+
+      if (!isWXDevicesResult(enableAndGetRes)) {
+        // 开启获取蓝牙失败
+        return rej(enableAndGetRes);
       }
 
-      if (!devices) {
-        // 获取蓝牙设备异常
-        return;
+      const { bleDevices } = enableAndGetRes;
+
+      const handleFoundDevices = async ({ devices }: { devices: WechatMiniprogram.BlueToothDevice[] }) => {
+        this.hasTimeoutHandler()
+          ? Array.prototype.push.apply(bleDevices, devices.filter((d) => this.isValidBleDevice(d, softAPSSIDPrefix)))
+          : wx.offBluetoothDeviceFound(handleFoundDevices);
       }
 
-      const resultList: boolean[] = [];
+      wx.onBluetoothDeviceFound(handleFoundDevices);
 
       const uint8Array = this.formatPackages(ssid, password);
-      for (let i = 0; i < devices.length; i++) {
+      const startConfigDevice = async () => {
         if (!this.hasTimeoutHandler()) {
           return;
         }
-        const device = devices[i];
-        // 延迟100ms发送一次
-        await sleep(100);
-        // 发送错误不处理，接着处理下个设备
-        const success = await sendBLEConfigCmd({
-          bleDeviceId: device.deviceId,
-          arryBuffer: uint8Array,
-          timeout,
+        const bleDevice = bleDevices.shift();
+        const success = bleDevice && await sendBLEConfigCmd({
+          bleDeviceId: bleDevice.deviceId,
+          arrayBuffer: uint8Array.buffer,
         });
-        resultList.push(success);
-      }
 
-      // 有一个发送蓝牙指令成功，则进入大循环确认阶段
-      if (resultList.some(success => success)) {
+        if (!success) {
+          // 如果校验设备或者发送不成功，重试下一个设备
+          await sleep(100);
+          await startConfigDevice();
+          return;
+        }
+
+        // 如果有一个设备发送成功，则不再发现新设备
+        wx.offBluetoothDeviceFound(handleFoundDevices);
+
+        // 进入大循环
         try {
           const devicesReturn = await this.searchDevice({ ssid, password });
           res(devicesReturn);
         } catch (error) {
           rej(error)
         }
-      } else {
-        rej({
-          success: false,
-          err: {
-            errorCode: errorCode.BLE_ERROR,
-            errorMsg: '发送蓝牙指令失败'
-          }
-        })
       }
+
+      await startConfigDevice();
     })
   }
 

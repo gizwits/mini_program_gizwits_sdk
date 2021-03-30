@@ -1,11 +1,10 @@
 
 
 import { expect } from 'chai';
-import GizwitsWS, { Connection } from '../src/socket';
-
 import 'mocha';
+
+import GizwitsWS, { Connection } from '../src/socket';
 import { setGlobalData } from '../src/globalData';
-import { doesNotReject } from 'assert';
 
 declare namespace global {
   const wx: any;
@@ -65,7 +64,7 @@ describe('socket', function () {
       }, 150);
 
       setTimeout(() => {
-        expect(conn._websocket.receiveCmds.filter(cmd => cmd === 'ping').length).to.equal(1);
+        expect(conn._websocket).to.be.null;
         done();
       }, 300);
     })
@@ -127,9 +126,17 @@ describe('socket', function () {
 
     it('smoke testing', () => {
       conn._websocket._handleMessage({ 'cmd': 'pong', data: {} });
-      conn._websocket._handleMessage({ 'cmd': 'subscribe_res', data: { success: [], fail: [] } });
+      conn._websocket._handleMessage({ 'cmd': 'subscribe_res', data: { success: [{ did: '123' }], fail: [] } });
       conn._websocket._handleMessage({ 'cmd': 's2c_invalid_msg', data: { msg: 'error', error_code: '1000' } });
       conn._websocket._handleError();
+    });
+
+    it('invalid msg 1003', (done) => {
+      setTimeout(() => {
+        conn._websocket._handleMessage({ 'cmd': 's2c_invalid_msg', data: { error_code: 1003 } });
+        expect(conn._websocket.receiveCmds.includes('login_req')).to.be.true;
+        done();
+      }, 100);
     });
   });
 
@@ -189,7 +196,7 @@ describe('socket', function () {
     it('_getWebsocketConnInfo', (done) => {
       ws.init().then(() => {
         const device = ws._getDevice('123');
-        expect(ws._getWebsocketConnInfo(device)).to.equal('wss://m2m.gizwits.com:2000');
+        expect(ws._getWebsocketConnInfo(device)).to.equal('wss://wxm2m.gizwits.com');
         done();
       })
 
@@ -281,6 +288,36 @@ describe('socket', function () {
         const wsInfo = ws._getWebsocketConnInfo(device);
         const conn = ws._connections[wsInfo];
         conn._websocket._handleMessage({ 'cmd': 's2c_noti', data: { did: '123', attrs: { onoff: false } } });
+      })
+    })
+
+    it('bindingsResult pagination', (done) => {
+      global.wx.requestErr = null;
+      global.wx.bindingsResult = {
+        data: {
+          devices: Array.from({ length: 20 }, (_, i) => ({
+            mac: `i`, did: '123', host: 'm2m.gizwits.com', wss_port: 2000,
+          }))
+        },
+        code: 200
+      };
+      ws.init().then((res) => {
+        expect(res).to.be.null;
+        done();
+      })
+    })
+
+    it('bindingsResult has error_code', (done) => {
+      global.wx.requestErr = null;
+      global.wx.bindingsResult = {
+        data: {
+          error_code: 4000
+        },
+        code: 200
+      };
+      ws.init().then((res) => {
+        expect(res).to.not.null;
+        done();
       })
     })
   })

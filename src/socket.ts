@@ -1,4 +1,3 @@
-import { getGlobalData } from "./globalData";
 import request from "./openApiRequest";
 import { compareWXSDKVersion, isError } from './utils';
 
@@ -117,7 +116,7 @@ export default class GizwitsWS {
         token: this.token,
         uid: this.uid,
         wsInfo,
-        _onDeviceStatusChanged: this._handleDeviceStatusChanged
+        onDeviceStatusChanged: this._handleDeviceStatusChanged
       });
       this._connections[wsInfo] = conn;
     }
@@ -135,8 +134,7 @@ export default class GizwitsWS {
     if (isError(res)) {
       return res;
     }
-    const [_, conn] = res;
-    return conn._send({
+    return res[1]._send({
       cmd: "c2s_raw",
       data: {
         did: did,
@@ -150,8 +148,7 @@ export default class GizwitsWS {
     if (isError(res)) {
       return res;
     }
-    const [_, conn] = res;
-    return conn._send({
+    return res[1]._send({
       cmd: "c2s_write",
       data: {
         did: did,
@@ -165,9 +162,7 @@ export default class GizwitsWS {
     if (isError(res)) {
       return res;
     }
-    const [_, conn] = res;
-
-    return conn._send({
+    return res[1]._send({
       cmd: "c2s_read",
       data: {
         did: did,
@@ -205,7 +200,9 @@ export default class GizwitsWS {
   }
 
   _getWebsocketConnInfo = (device) => {
-    return `wss://${device.host}:${device.wss_port}`
+    return device.host.includes('stage')
+      ? 'wss://wxstage.gizwits.com'
+      : 'wss://wxm2m.gizwits.com';
   }
 
 
@@ -213,7 +210,7 @@ export default class GizwitsWS {
 
 interface IConnectProps extends ICommonProps {
   wsInfo: string;
-  _onDeviceStatusChanged?: IOnDeviceStatusChanged;
+  onDeviceStatusChanged?: IOnDeviceStatusChanged;
 }
 
 export class Connection {
@@ -239,7 +236,7 @@ export class Connection {
     token,
     uid,
     wsInfo,
-    _onDeviceStatusChanged,
+    onDeviceStatusChanged,
   }: IConnectProps) {
     this.appID = appID;
     this.token = token;
@@ -247,7 +244,7 @@ export class Connection {
     this._wsUrl = `${wsInfo}/ws/app/v1`;
     this._heartbeatTimerId = undefined;
     this._loginFailedTimes = 0;
-    this._onDeviceStatusChanged = _onDeviceStatusChanged;
+    this._onDeviceStatusChanged = onDeviceStatusChanged;
     this._socketRespHandleMap = {
       pong: this.pongResp,
       login_res: this._loginResp,
@@ -286,6 +283,14 @@ export class Connection {
           data: JSON.stringify(data),
           complete: (res) => {
             console.debug('GIZ_SDK: socket send res', res);
+            if ([
+              'sendSocketMessage:fail debug invoke no active session',
+              'sendSocketMessage:fail wcwss taskID not exist'
+            ].includes(res && res.errMsg)) {
+              // 重新connect
+              this._websocket && this._websocket.close({});
+              this._connectWS();
+            }
             resolve(res);
           }
         })
@@ -306,15 +311,18 @@ export class Connection {
 
   handleClose = (res: { code: number, reason: string }) => {
     console.log('socket close', res);
+    this.close();
     this._stopPing();
   }
 
   handleOpen = () => {
     // socket 打开后执行登录
+    console.log(' socket open')
     this._login();
   }
 
   handleMessage = ({ data }: { data: string | ArrayBuffer }) => {
+    console.log('message', data);
     const res = JSON.parse(data as string);
     const handle = this._socketRespHandleMap[res.cmd];
     handle && handle(res.data);
@@ -376,6 +384,16 @@ export class Connection {
   }
 
   _subscribeResp = (data) => {
+    console.log('GIZ_SDK: subscribe_res', data);
+    if (data && data.success) {
+      // 订阅成功设备获取设备状态
+      data.success.forEach(d => this._send({
+        cmd: "c2s_read",
+        data: {
+          did: d.did,
+        }
+      }))
+    }
     console.debug('GIZ_SDK: subscribe_res', data);
   }
 
@@ -394,6 +412,10 @@ export class Connection {
   }
 
   _invalidMsgResp = (data) => {
+    if (data.error_code === 1003) {
+      // 重新登录
+      this._login();
+    }
     console.debug('GIZ_SDK: s2c_invalid_msg', data);
   }
 }

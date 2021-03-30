@@ -11,8 +11,18 @@ declare namespace global {
 
 describe('wechatApi', function () {
 
+  it('openBluetoothAdapter', () => {
+    const p = wechatApi.openBluetoothAdapter();
+    expect(p instanceof Promise).to.be.true;
+  })
+
   it('getBluetoothAdapterState', () => {
     const p = wechatApi.getBluetoothAdapterState();
+    expect(p instanceof Promise).to.be.true;
+  })
+
+  it('startBluetoothDevicesDiscovery', () => {
+    const p = wechatApi.startBluetoothDevicesDiscovery();
     expect(p instanceof Promise).to.be.true;
   })
 
@@ -39,8 +49,6 @@ describe('wechatApi', function () {
       done();
     });
   })
-
-
 
   it('createBLEConnection', () => {
     const p = wechatApi.createBLEConnection('123', 2000);
